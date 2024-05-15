@@ -206,6 +206,12 @@ static gboolean OnDrop(GtkDropTarget *target,
                        double y,
                        gpointer data);
 
+/**
+ * @brief build de l'application a la creation
+ * 
+ * @param app 
+ * @param user_data 
+ */
 static void
 activate(GtkApplication *app,
          gpointer user_data)
@@ -373,6 +379,11 @@ activate(GtkApplication *app,
     __poflashLoadCss();
     gtk_window_present(GTK_WINDOW(pWindowMain));
 }
+
+/**
+ * @brief charge le theme CSS
+ * 
+ */
 static void __poflashLoadCss()
 {
     pCssProvider = gtk_css_provider_new();
@@ -381,6 +392,11 @@ static void __poflashLoadCss()
     gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(pCssProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
+/**
+ * @brief initialise l'application et le lancement
+ * 
+ * @return int 
+ */
 int poFlashNew()
 {
     int status;
@@ -394,6 +410,13 @@ int poFlashNew()
     return status;
 }
 
+/**
+ * @brief reponse de la boite de dialogue de fermeture
+ * 
+ * @param pWidget 
+ * @param result 
+ * @param data 
+ */
 void OnResponse(GtkWidget *pWidget, gint result, gpointer data)
 {
     switch (result)
@@ -408,6 +431,12 @@ void OnResponse(GtkWidget *pWidget, gint result, gpointer data)
     }
 }
 
+/**
+ * @brief boite de dialogue qui permet de fermer l'application ou non
+ * 
+ * @param pWidget 
+ * @param pData 
+ */
 void OnDestroy(GtkWidget *pWidget, gpointer pData)
 {
     GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
@@ -428,6 +457,16 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
     gtk_widget_show(pDialogBoxQuit);
 }
 
+/**
+ * @brief cree une liste de fichiers venant du drag and drop
+ * 
+ * @param target self
+ * @param value fichier droppé
+ * @param x 
+ * @param y 
+ * @param data xgettext_args
+ * @return gboolean 
+ */
 static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, double y, gpointer data)
 {
     static GList *listFile = NULL;
@@ -460,6 +499,10 @@ static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, dou
     return TRUE;
 }
 
+/**
+ * construit la ligne de commande xgettext en fonction des parametres de data xgettext_args
+ * @param data pXgettext
+ */
 static void OnClickXgettext(GtkWidget *pWidget, gpointer data)
 {
     /*  xgettext -f FILE -D "/home/jean/Senku2-64/" --default-domain=SENKU -o outputTest.pot
@@ -529,6 +572,7 @@ utilities python gettext
             pXgettext->msgid_bugs_address = "";
     }
     g_free(msgIdBugsAddress);
+
     g_printf("DEBUG: pXgettext->inputfile:|%s|\n", pXgettext->inputfile);
     g_printf("DEBUG: pXgettext->keyword:|%s|\n", pXgettext->keyword);
     g_printf("DEBUG: pXgettext->from_code:|%s|\n", pXgettext->from_code);
@@ -544,6 +588,12 @@ utilities python gettext
     // g_spawn_command_line_async("xgettext -L C ./*", NULL);
 }
 
+/**
+ * @brief devine le nom du package dans le repertoire en se basant sur le nom d'un fichier compilé type data)
+ *
+ * @param pDir repertoire contenant les fichiers
+ * @return gchar* le nom du package
+ */
 static gchar *__getPackageGuessIntoDir(const gchar *pDir)
 {
     const gchar *f;
@@ -588,6 +638,14 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir)
     return NULL;
 }
 
+/**
+ * @brief write from-code option --from-code
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchFromCode(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -603,6 +661,14 @@ static gboolean OnSwitchFromCode(GtkWidget *pWidget, gboolean state, gpointer da
     return TRUE;
 }
 
+/**
+ * @brief write force-po option --force-po
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchForcePo(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -618,6 +684,14 @@ static gboolean OnSwitchForcePo(GtkWidget *pWidget, gboolean state, gpointer dat
     return TRUE;
 }
 
+/**
+ * @brief write package version option --package-version
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchPackageVersion(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -633,6 +707,14 @@ static gboolean OnSwitchPackageVersion(GtkWidget *pWidget, gboolean state, gpoin
     return TRUE;
 }
 
+/**
+ * @brief write copyright holder option --copyright-holder
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchCopyrightHolder(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -648,6 +730,14 @@ static gboolean OnSwitchCopyrightHolder(GtkWidget *pWidget, gboolean state, gpoi
     return TRUE;
 }
 
+/**
+ * @brief write cplusplus option --c++
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchCplusplus(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -663,6 +753,14 @@ static gboolean OnSwitchCplusplus(GtkWidget *pWidget, gboolean state, gpointer d
     return TRUE;
 }
 
+/**
+ * @brief write output dir option -p
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchOutputDir(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -684,6 +782,14 @@ static gboolean OnSwitchOutputDir(GtkWidget *pWidget, gboolean state, gpointer d
     return TRUE;
 }
 
+/**
+ * @brief write add comments
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchAddComments(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -699,6 +805,14 @@ static gboolean OnSwitchAddComments(GtkWidget *pWidget, gboolean state, gpointer
     return TRUE;
 }
 
+/**
+ * @brief write guess package name
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return gboolean
+ */
 static gboolean OnSwitchPackageGuess(GtkWidget *pWidget, gboolean state, gpointer data)
 {
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
@@ -715,6 +829,13 @@ static gboolean OnSwitchPackageGuess(GtkWidget *pWidget, gboolean state, gpointe
     return TRUE;
 }
 
+/**
+ * @brief bootstrap
+ *
+ * @param argc
+ * @param argv
+ * @return int
+ */
 int main(int argc, char *argv[])
 {
     if (poFlashNew())
