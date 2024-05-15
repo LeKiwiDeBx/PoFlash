@@ -1,0 +1,7 @@
+[
+    {
+        "command": "gcc -g -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-unused-function -Wno-char-subscripts -Wdeprecated-declarations -O3 -Wall -Wextra -o main.o -c main.c `pkg-config --cflags --libs gtk4` ",
+        "directory": "/home/jean/PoFlash",
+        "file": "/home/jean/PoFlash/main.c"
+    }
+]
