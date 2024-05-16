@@ -1,0 +1,107 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR jean
+# This file is distributed under the same license as the PoFlash package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PoFlash 1.0\n"
+"Report-Msgid-Bugs-To: LeKiwiDeBx.Translator@ll.org\n"
+"POT-Creation-Date: 2024-05-16 16:31+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: main.c:53
+msgid "Your Package Name"
+msgstr ""
+
+#: main.c:54
+msgid "Email@Address"
+msgstr ""
+
+#: main.c:264
+msgid "From code: UTF-8"
+msgstr ""
+
+#: main.c:268
+msgid "Force PO"
+msgstr ""
+
+#: main.c:272
+msgid "Package version: "
+msgstr ""
+
+#: main.c:276
+msgid "Copyright holder: "
+msgstr ""
+
+#: main.c:280
+msgid "Language: C++ "
+msgstr ""
+
+#: main.c:284
+msgid "Output dir: ./"
+msgstr ""
+
+#: main.c:288
+msgid "Package name: "
+msgstr ""
+
+#: main.c:292
+msgid "Add comments: "
+msgstr ""
+
+#: main.c:335
+msgid "--msgid-bugs-address=EMAIL@ADDRESS set report address for msgid bugs"
+msgstr ""
+
+#: main.c:359
+msgid "Add Keyword"
+msgstr ""
+
+#: main.c:361
+msgid ""
+"-k --keyword=KEYWORD\n"
+"additional keyword to be looked for\n"
+"(without WORD means not to use\n"
+"default keywords)"
+msgstr ""
+
+#. TRANSLATORS:Think create a file .pot
+#: main.c:365
+msgid "Create pot"
+msgstr ""
+
+#: main.c:370
+msgid "Create po"
+msgstr ""
+
+#: main.c:376
+msgid "Make mo"
+msgstr ""
+
+#: main.c:379
+msgid "Quit"
+msgstr ""
+
+#: main.c:461
+msgid "Confirm QUIT"
+msgstr ""
+
+#: main.c:464
+msgid "_Cancel"
+msgstr ""
+
+#: main.c:466
+msgid "_Ok"
+msgstr ""
+
+#: main.c:471
+msgid "Do you really want to quit ?"
+msgstr ""

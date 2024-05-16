@@ -19,8 +19,9 @@ typedef struct s_xgettext_args
                 */
       /* Output file location: */
       /*  char *default_domain; // -d use NAME.po for output (instead of messages.po) |
+      */
        char *output;         // -o write output to specified file .po or .pot      | -d OR -o
-       */
+       
        char *output_dir;     // -p output files will be placed in directory DIR
 
       /* Choice of input file language: */

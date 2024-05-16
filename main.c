@@ -1,4 +1,4 @@
-/*
+/**
  * @file main.c
  * @author LeKiwiDeBx
  * @brief
@@ -69,8 +69,12 @@ GtkCssProvider *pCssProvider;
 GtkWidget *pEntryKeyword;
 /* entry for package name*/
 GtkWidget *pEntryPackageName;
-
+/* entry for msgid-bugs-address*/
 GtkWidget *pEntryMsgIdBugsAddress;
+/* view for line command xgettext*/
+GtkWidget *pTextViewLineCommand;
+/* buffer for line command xgettext*/
+GtkTextBuffer *pBufferTextViewLineCommand;
 /**
  * @brief Appel pour fin d'application
  * @param pWidget appele par les boutons quit et fermeture fenetre
@@ -173,6 +177,8 @@ static gboolean OnSwitchAddComments(GtkWidget *pWidget, gboolean state, gpointer
 
 static gchar *__getPackageGuessIntoDir(const gchar *pDir);
 #define PACKAGE_NAME_DEFAULT __getPackageGuessIntoDir(".")
+#define FILE_EXTENSION_POT ".pot"
+#define OUTPUT_DEFAULT g_strconcat(PACKAGE_NAME_DEFAULT, FILE_EXTENSION_POT, NULL)
 
 /**
  * @brief  active le switch pour deviner pour l'option --package-name=PACKAGE set package name in output
@@ -183,6 +189,16 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir);
  * @return gboolean
  */
 static gboolean OnSwitchPackageGuess(GtkWidget *pWidget, gboolean state, gpointer data);
+
+/**
+ * @brief active le switch pour l'option -o write output to specified file .po or .pot
+ *
+ * @param pWidget
+ * @param state
+ * @param data
+ * @return g_boolean
+ */
+static gboolean OnSwitchOutput(GtkWidget *pWidget, gboolean state, gpointer data);
 
 /**
  * @brief load css
@@ -208,9 +224,9 @@ static gboolean OnDrop(GtkDropTarget *target,
 
 /**
  * @brief build de l'application a la creation
- * 
- * @param app 
- * @param user_data 
+ *
+ * @param app
+ * @param user_data
  */
 static void
 activate(GtkApplication *app,
@@ -230,6 +246,7 @@ activate(GtkApplication *app,
     pXgettext->cplusplus = g_strdup("");
     pXgettext->output_dir = g_strdup("");
     pXgettext->add_comments = g_strdup("");
+    pXgettext->output = g_strdup(OUTPUT_DEFAULT);
 
     pWindowMain = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(pWindowMain), APPLICATION_TITLE);
@@ -261,12 +278,24 @@ activate(GtkApplication *app,
     GtkWidget *pSwitchFromCode = gtk_switch_new();
 
     GtkWidget *pBoxRowForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+
+    GtkWidget *pBoxLabelForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pLabelForcePo = gtk_label_new(_("Force PO"));
+    gtk_box_append(GTK_BOX(pBoxLabelForcePo), pLabelForcePo);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxLabelForcePo), GTK_ALIGN_START);
+
+    GtkWidget *pBoxSwitchForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pSwitchForcePo = gtk_switch_new();
+    gtk_box_append(GTK_BOX(pBoxSwitchForcePo), pSwitchForcePo);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxSwitchForcePo), GTK_ALIGN_END);
 
     GtkWidget *pBoxRowPackageVersion = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pLabelPackageVersion = gtk_label_new(g_strconcat(_("Package version: "), PACKAGE_VERSION_DEFAULT, NULL));
     GtkWidget *pSwitchPackageVersion = gtk_switch_new();
+
+    GtkWidget *pBoxRowOutput = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget *pLabelOutput = gtk_label_new(g_strconcat(_("Output: "), OUTPUT_DEFAULT, NULL));
+    GtkWidget *pSwitchOutput = gtk_switch_new();
 
     GtkWidget *pBoxRowCopyrightHolder = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pLabelCopyrightHolder = gtk_label_new(g_strconcat(_("Copyright holder: "), COPYRIGHT_HOLDER_DEFAULT, NULL));
@@ -290,15 +319,21 @@ activate(GtkApplication *app,
 
     gtk_box_append(GTK_BOX(pBoxRowFromCode), pLabelFromCode);
     gtk_box_append(GTK_BOX(pBoxRowFromCode), pSwitchFromCode);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowFromCode), GTK_ALIGN_END);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxRowFromCode), GTK_ALIGN_FILL);
 
-    gtk_box_append(GTK_BOX(pBoxRowForcePo), pLabelForcePo);
-    gtk_box_append(GTK_BOX(pBoxRowForcePo), pSwitchForcePo);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowForcePo), GTK_ALIGN_END);
+    gtk_box_set_homogeneous(GTK_BOX(pBoxRowForcePo), TRUE);
+
+    gtk_box_append(GTK_BOX(pBoxRowForcePo), pBoxLabelForcePo);
+    gtk_box_append(GTK_BOX(pBoxRowForcePo), pBoxSwitchForcePo);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxRowForcePo), GTK_ALIGN_FILL);
 
     gtk_box_append(GTK_BOX(pBoxRowPackageVersion), pLabelPackageVersion);
     gtk_box_append(GTK_BOX(pBoxRowPackageVersion), pSwitchPackageVersion);
     gtk_widget_set_halign(GTK_WIDGET(pBoxRowPackageVersion), GTK_ALIGN_END);
+
+    gtk_box_append(GTK_BOX(pBoxRowOutput), pLabelOutput);
+    gtk_box_append(GTK_BOX(pBoxRowOutput), pSwitchOutput);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxRowOutput), GTK_ALIGN_END);
 
     gtk_box_append(GTK_BOX(pBoxRowCopyrightHolder), pLabelCopyrightHolder);
     gtk_box_append(GTK_BOX(pBoxRowCopyrightHolder), pSwitchCopyrightHolder);
@@ -329,16 +364,18 @@ activate(GtkApplication *app,
     gtk_entry_set_placeholder_text(GTK_ENTRY(pEntryMsgIdBugsAddress), MSG_ID_BUGS_ADDRESS_PLACEHOLDER);
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(pEntryMsgIdBugsAddress), GTK_ENTRY_ICON_PRIMARY, "help-about");
     gtk_entry_set_icon_tooltip_text(GTK_ENTRY(pEntryMsgIdBugsAddress), GTK_ENTRY_ICON_PRIMARY, _("--msgid-bugs-address=EMAIL@ADDRESS set report address for msgid bugs"));
+    gtk_grid_attach(GTK_GRID(pGridMain), GTK_WIDGET(pEntryMsgIdBugsAddress), 1, 1, 1, 1);
 
     gtk_box_append(GTK_BOX(pBox), pBoxRowFromCode);
     gtk_box_append(GTK_BOX(pBox), pBoxRowForcePo);
     gtk_box_append(GTK_BOX(pBox), pBoxRowOutputDir);
+    gtk_box_append(GTK_BOX(pBox), pBoxRowOutput);
     gtk_box_append(GTK_BOX(pBox), pBoxRowPackageName);
     gtk_box_append(GTK_BOX(pBox), pBoxRowPackageVersion);
     gtk_box_append(GTK_BOX(pBox), pBoxRowCplusplus);
     gtk_box_append(GTK_BOX(pBox), pBoxRowAddComments);
     gtk_box_append(GTK_BOX(pBox), pBoxRowCopyrightHolder);
-    gtk_box_append(GTK_BOX(pBox), pEntryMsgIdBugsAddress);
+    // gtk_box_append(GTK_BOX(pBox), pEntryMsgIdBugsAddress);
 
     g_signal_connect(G_OBJECT(pSwitchFromCode), "state-set", G_CALLBACK(OnSwitchFromCode), pXgettext);
     g_signal_connect(G_OBJECT(pSwitchForcePo), "state-set", G_CALLBACK(OnSwitchForcePo), pXgettext);
@@ -348,6 +385,7 @@ activate(GtkApplication *app,
     g_signal_connect(G_OBJECT(pSwitchOutputDir), "state-set", G_CALLBACK(OnSwitchOutputDir), pXgettext);
     g_signal_connect(G_OBJECT(pSwitchAddComments), "state-set", G_CALLBACK(OnSwitchAddComments), pXgettext);
     g_signal_connect(G_OBJECT(pSwitchPackageName), "state-set", G_CALLBACK(OnSwitchPackageGuess), pXgettext);
+    g_signal_connect(G_OBJECT(pSwitchOutput), "state-set", G_CALLBACK(OnSwitchOutput), pXgettext);
 
     gtk_grid_attach(GTK_GRID(pGridMain), pBox, 1, 0, 1, 1);
 
@@ -364,17 +402,31 @@ activate(GtkApplication *app,
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonXgettext, 0, 2, 1, 1);
 
     GtkWidget *pButtonCreatePo = gtk_button_new_with_label(_(/*NOTHING:pas DeBlaBla*/ "Create po"));
-    gtk_grid_attach(GTK_GRID(pGridMain), pButtonCreatePo, 1, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(pGridMain), pButtonCreatePo, 1, 2, 1, 1);
 
-    GtkWidget *pButtonMergePo = gtk_button_new_with_label(_(/*no BlaBlaForMe*/ "Merge po"));
-    gtk_grid_attach(GTK_GRID(pGridMain), pButtonMergePo, 1, 2, 1, 1);
+    //  GtkWidget *pButtonMergePo = gtk_button_new_with_label(_(/*no BlaBlaForMe*/ "Merge po"));
+    // gtk_grid_attach(GTK_GRID(pGridMain), pButtonMergePo, 1, 2, 1, 1);
 
     GtkWidget *pButtonMakePo = gtk_button_new_with_label(_("Make mo"));
-    gtk_grid_attach(GTK_GRID(pGridMain), pButtonMakePo, 2, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(pGridMain), pButtonMakePo, 3, 2, 1, 1);
 
     GtkWidget *pButtonQuit = gtk_button_new_with_label(_("Quit"));
-    gtk_grid_attach(GTK_GRID(pGridMain), pButtonQuit, 2, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(pGridMain), pButtonQuit, 4, 2, 1, 1);
     g_signal_connect(G_OBJECT(pButtonQuit), "clicked", G_CALLBACK(OnDestroy), NULL);
+
+    pBufferTextViewLineCommand = gtk_text_buffer_new(NULL);
+    pTextViewLineCommand = gtk_text_view_new_with_buffer(GTK_TEXT_BUFFER(pBufferTextViewLineCommand));
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(pTextViewLineCommand), GTK_WRAP_WORD_CHAR);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(pTextViewLineCommand), TRUE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(pTextViewLineCommand), TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(pTextViewLineCommand), GTK_WRAP_WORD_CHAR);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(pTextViewLineCommand), TRUE);
+    gtk_text_view_set_left_margin(GTK_TEXT_VIEW(pTextViewLineCommand), 10);
+    gtk_text_view_set_right_margin(GTK_TEXT_VIEW(pTextViewLineCommand), 10);
+    gtk_text_view_set_top_margin(GTK_TEXT_VIEW(pTextViewLineCommand), 10);
+    gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(pTextViewLineCommand), 10);
+    gtk_text_view_set_justification(GTK_TEXT_VIEW(pTextViewLineCommand), GTK_JUSTIFY_LEFT);
+    gtk_grid_attach(GTK_GRID(pGridMain), pTextViewLineCommand, 0, 3, 5, 1);
 
     __poflashLoadCss();
     gtk_window_present(GTK_WINDOW(pWindowMain));
@@ -382,7 +434,7 @@ activate(GtkApplication *app,
 
 /**
  * @brief charge le theme CSS
- * 
+ *
  */
 static void __poflashLoadCss()
 {
@@ -394,8 +446,8 @@ static void __poflashLoadCss()
 
 /**
  * @brief initialise l'application et le lancement
- * 
- * @return int 
+ *
+ * @return int
  */
 int poFlashNew()
 {
@@ -412,10 +464,10 @@ int poFlashNew()
 
 /**
  * @brief reponse de la boite de dialogue de fermeture
- * 
- * @param pWidget 
- * @param result 
- * @param data 
+ *
+ * @param pWidget
+ * @param result
+ * @param data
  */
 void OnResponse(GtkWidget *pWidget, gint result, gpointer data)
 {
@@ -433,9 +485,9 @@ void OnResponse(GtkWidget *pWidget, gint result, gpointer data)
 
 /**
  * @brief boite de dialogue qui permet de fermer l'application ou non
- * 
- * @param pWidget 
- * @param pData 
+ *
+ * @param pWidget
+ * @param pData
  */
 void OnDestroy(GtkWidget *pWidget, gpointer pData)
 {
@@ -459,13 +511,13 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
 
 /**
  * @brief cree une liste de fichiers venant du drag and drop
- * 
+ *
  * @param target self
  * @param value fichier droppé
- * @param x 
- * @param y 
+ * @param x
+ * @param y
  * @param data xgettext_args
- * @return gboolean 
+ * @return gboolean
  */
 static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, double y, gpointer data)
 {
@@ -580,10 +632,28 @@ utilities python gettext
     g_printf("DEBUG: pXgettext->copyright_holder:|%s|\n", pXgettext->copyright_holder);
     g_printf("DEBUG: pXgettext->package_version:|%s|\n", pXgettext->package_version);
     g_printf("DEBUG: pXgettext->package_name:|%s|\n", pXgettext->package_name);
+    g_printf("DEBUG: pXgettext->output:|%s|\n", pXgettext->output);
     g_printf("DEBUG: pXgettext->msgid_bugs_address:|%s|\n", pXgettext->msgid_bugs_address);
     g_printf("DEBUG: pXgettext->cplusplus:|%s|\n", pXgettext->cplusplus);
     g_printf("DEBUG: pXgettext->output_dir:|%s|\n", pXgettext->output_dir);
     g_printf("DEBUG: pXgettext->add_comments:|%s|\n", pXgettext->add_comments);
+    
+    gchar *cmdline = g_strdup_printf("xgettext %s %s %s %s %s %s %s %s %s %s %s %s",
+                                     pXgettext->output_dir,
+                                     pXgettext->output,
+                                     pXgettext->cplusplus,
+                                     pXgettext->from_code,
+                                     pXgettext->add_comments,
+                                     pXgettext->keyword,
+                                     pXgettext->force_po,
+                                     pXgettext->copyright_holder,
+                                     pXgettext->package_name,
+                                     pXgettext->package_version,
+                                     pXgettext->msgid_bugs_address,
+                                     pXgettext->inputfile);
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(pBufferTextViewLineCommand), cmdline, -1);
+    /* pBufferTextViewLineCommand
+    pTextViewLineCommand */
 
     // g_spawn_command_line_async("xgettext -L C ./*", NULL);
 }
@@ -825,6 +895,21 @@ static gboolean OnSwitchPackageGuess(GtkWidget *pWidget, gboolean state, gpointe
     else
     {
         data_xgettext_args->package_name = "";
+    }
+    return TRUE;
+}
+
+static gboolean OnSwitchOutput(GtkWidget *pWidget, gboolean state, gpointer data)
+{
+    xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
+    gtk_switch_set_state(GTK_SWITCH(pWidget), state);
+    if (state)
+    {
+        data_xgettext_args->output = g_strconcat("-o ", OUTPUT_DEFAULT, NULL);
+    }
+    else
+    {
+        data_xgettext_args->output = "";
     }
     return TRUE;
 }
