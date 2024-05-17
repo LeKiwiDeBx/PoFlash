@@ -207,6 +207,23 @@ static gboolean OnSwitchOutput(GtkWidget *pWidget, gboolean state, gpointer data
 static void __poflashLoadCss();
 
 /**
+ * @brief construit une ligne avec alignement label et switch
+ *
+ * @param pBoxRow
+ * @param pLabel
+ * @param pSwitch
+ */
+static void __box_row_set_align_label_switch(GtkWidget *pBoxRow, GtkWidget *pLabel, GtkWidget *pSwitch);
+
+/**
+ * @brief ajoute un espace dans une chaine si non vide
+ * 
+ * @param paramXgettext 
+ * @return char* 
+ */
+static char *__addSpace(char *paramXgettext);
+
+/**
  * @brief OnDrop sur l´image pour enregistrer un fichier ou des fichiers dans pXgettext
  *
  * @param target
@@ -278,16 +295,8 @@ activate(GtkApplication *app,
     GtkWidget *pSwitchFromCode = gtk_switch_new();
 
     GtkWidget *pBoxRowForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-
-    GtkWidget *pBoxLabelForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pLabelForcePo = gtk_label_new(_("Force PO"));
-    gtk_box_append(GTK_BOX(pBoxLabelForcePo), pLabelForcePo);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxLabelForcePo), GTK_ALIGN_START);
-
-    GtkWidget *pBoxSwitchForcePo = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pSwitchForcePo = gtk_switch_new();
-    gtk_box_append(GTK_BOX(pBoxSwitchForcePo), pSwitchForcePo);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxSwitchForcePo), GTK_ALIGN_END);
 
     GtkWidget *pBoxRowPackageVersion = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkWidget *pLabelPackageVersion = gtk_label_new(g_strconcat(_("Package version: "), PACKAGE_VERSION_DEFAULT, NULL));
@@ -317,49 +326,16 @@ activate(GtkApplication *app,
     GtkWidget *pLabelAddComments = gtk_label_new(g_strconcat(_("Add comments: "), ADD_COMMENTS_DEFAULT, NULL));
     GtkWidget *pSwitchAddComments = gtk_switch_new();
 
-    gtk_box_append(GTK_BOX(pBoxRowFromCode), pLabelFromCode);
-    gtk_box_append(GTK_BOX(pBoxRowFromCode), pSwitchFromCode);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowFromCode), GTK_ALIGN_FILL);
+    __box_row_set_align_label_switch(pBoxRowFromCode, pLabelFromCode, pSwitchFromCode);
+    __box_row_set_align_label_switch(pBoxRowForcePo, pLabelForcePo, pSwitchForcePo);
+    __box_row_set_align_label_switch(pBoxRowPackageVersion, pLabelPackageVersion, pSwitchPackageVersion);
+    __box_row_set_align_label_switch(pBoxRowOutput, pLabelOutput, pSwitchOutput);
+    __box_row_set_align_label_switch(pBoxRowCopyrightHolder, pLabelCopyrightHolder, pSwitchCopyrightHolder);
+    __box_row_set_align_label_switch(pBoxRowCplusplus, pLabelCplusplus, pSwitchCplusplus);
+    __box_row_set_align_label_switch(pBoxRowOutputDir, pLabelOutputDir, pSwitchOutputDir);
+    __box_row_set_align_label_switch(pBoxRowAddComments, pLabelAddComments, pSwitchAddComments);
+    __box_row_set_align_label_switch(pBoxRowPackageName, pLabelPackageName, pSwitchPackageName);
 
-    gtk_box_set_homogeneous(GTK_BOX(pBoxRowForcePo), TRUE);
-
-    gtk_box_append(GTK_BOX(pBoxRowForcePo), pBoxLabelForcePo);
-    gtk_box_append(GTK_BOX(pBoxRowForcePo), pBoxSwitchForcePo);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowForcePo), GTK_ALIGN_FILL);
-
-    gtk_box_append(GTK_BOX(pBoxRowPackageVersion), pLabelPackageVersion);
-    gtk_box_append(GTK_BOX(pBoxRowPackageVersion), pSwitchPackageVersion);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowPackageVersion), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowOutput), pLabelOutput);
-    gtk_box_append(GTK_BOX(pBoxRowOutput), pSwitchOutput);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowOutput), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowCopyrightHolder), pLabelCopyrightHolder);
-    gtk_box_append(GTK_BOX(pBoxRowCopyrightHolder), pSwitchCopyrightHolder);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowCopyrightHolder), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowCplusplus), pLabelCplusplus);
-    gtk_box_append(GTK_BOX(pBoxRowCplusplus), pSwitchCplusplus);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowCplusplus), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowOutputDir), pLabelOutputDir);
-    gtk_box_append(GTK_BOX(pBoxRowOutputDir), pSwitchOutputDir);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowOutputDir), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowAddComments), pLabelAddComments);
-    gtk_box_append(GTK_BOX(pBoxRowAddComments), pSwitchAddComments);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowAddComments), GTK_ALIGN_END);
-
-    gtk_box_append(GTK_BOX(pBoxRowPackageName), pLabelPackageName);
-    gtk_box_append(GTK_BOX(pBoxRowPackageName), pSwitchPackageName);
-    gtk_widget_set_halign(GTK_WIDGET(pBoxRowPackageName), GTK_ALIGN_END);
-
-    /*  pEntryPackageName = gtk_entry_new();
-     gtk_entry_set_placeholder_text(GTK_ENTRY(pEntryPackageName), PACKAGE_NAME_PLACEHOLDER);
-     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(pEntryPackageName), GTK_ENTRY_ICON_PRIMARY, "help-about");
-     gtk_entry_set_icon_tooltip_text(GTK_ENTRY(pEntryPackageName), GTK_ENTRY_ICON_PRIMARY, _("--package-name=PACKAGE set package name in output"));
-  */
     pEntryMsgIdBugsAddress = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(pEntryMsgIdBugsAddress), MSG_ID_BUGS_ADDRESS_PLACEHOLDER);
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(pEntryMsgIdBugsAddress), GTK_ENTRY_ICON_PRIMARY, "help-about");
@@ -375,7 +351,6 @@ activate(GtkApplication *app,
     gtk_box_append(GTK_BOX(pBox), pBoxRowCplusplus);
     gtk_box_append(GTK_BOX(pBox), pBoxRowAddComments);
     gtk_box_append(GTK_BOX(pBox), pBoxRowCopyrightHolder);
-    // gtk_box_append(GTK_BOX(pBox), pEntryMsgIdBugsAddress);
 
     g_signal_connect(G_OBJECT(pSwitchFromCode), "state-set", G_CALLBACK(OnSwitchFromCode), pXgettext);
     g_signal_connect(G_OBJECT(pSwitchForcePo), "state-set", G_CALLBACK(OnSwitchForcePo), pXgettext);
@@ -394,7 +369,6 @@ activate(GtkApplication *app,
     gtk_entry_set_icon_from_icon_name(GTK_ENTRY(pEntryKeyword), GTK_ENTRY_ICON_PRIMARY, "help-about");
     gtk_entry_set_icon_tooltip_text(GTK_ENTRY(pEntryKeyword), GTK_ENTRY_ICON_PRIMARY, _("-k --keyword=KEYWORD\nadditional keyword to be looked for\n(without WORD means not to use\ndefault keywords)"));
     gtk_grid_attach(GTK_GRID(pGridMain), GTK_WIDGET(pEntryKeyword), 0, 1, 1, 1);
-    // gtk_box_append(GTK_BOX(pBox), pEntryKeyword);
 
     GtkWidget *pButtonXgettext = gtk_button_new_with_label(_(/*TRANSLATORS:Think create a file .pot*/ "Create pot"));
 
@@ -442,6 +416,24 @@ static void __poflashLoadCss()
     const gchar *themePathFile = g_strdup_printf("%s%s", POFLASH_THEME_PATH, POFLASH_THEME_FILE);
     gtk_css_provider_load_from_path(pCssProvider, themePathFile);
     gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(pCssProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+}
+
+/**
+ * @brief aligne un label justifie gau et un switch justifie droite sur une ligne horizontale
+ *
+ * @param pBoxRow
+ * @param pLabel
+ * @param pSwitch
+ */
+static void __box_row_set_align_label_switch(GtkWidget *pBoxRow, GtkWidget *pLabel, GtkWidget *pSwitch)
+{
+    gtk_box_append(GTK_BOX(pBoxRow), pLabel);
+    gtk_widget_set_halign(GTK_WIDGET(pLabel), GTK_ALIGN_START);
+    gtk_label_set_xalign(GTK_LABEL(pLabel), 0.0);
+    gtk_widget_set_hexpand(GTK_WIDGET(pLabel), TRUE);
+    gtk_box_append(GTK_BOX(pBoxRow), pSwitch);
+    gtk_widget_set_halign(GTK_WIDGET(pSwitch), GTK_ALIGN_END);
+    gtk_widget_set_halign(GTK_WIDGET(pBoxRow), GTK_ALIGN_FILL);
 }
 
 /**
@@ -637,20 +629,20 @@ utilities python gettext
     g_printf("DEBUG: pXgettext->cplusplus:|%s|\n", pXgettext->cplusplus);
     g_printf("DEBUG: pXgettext->output_dir:|%s|\n", pXgettext->output_dir);
     g_printf("DEBUG: pXgettext->add_comments:|%s|\n", pXgettext->add_comments);
-    
-    gchar *cmdline = g_strdup_printf("xgettext %s %s %s %s %s %s %s %s %s %s %s %s",
-                                     pXgettext->output_dir,
-                                     pXgettext->output,
-                                     pXgettext->cplusplus,
-                                     pXgettext->from_code,
-                                     pXgettext->add_comments,
-                                     pXgettext->keyword,
-                                     pXgettext->force_po,
-                                     pXgettext->copyright_holder,
-                                     pXgettext->package_name,
-                                     pXgettext->package_version,
-                                     pXgettext->msgid_bugs_address,
-                                     pXgettext->inputfile);
+
+    gchar *cmdline = g_strdup_printf("xgettext %s%s%s%s%s%s%s%s%s%s%s%s",
+                                     __addSpace(pXgettext->output_dir),
+                                     __addSpace(pXgettext->output),
+                                     __addSpace(pXgettext->cplusplus),
+                                     __addSpace(pXgettext->from_code),
+                                     __addSpace(pXgettext->add_comments),
+                                     __addSpace(pXgettext->keyword),
+                                     __addSpace(pXgettext->force_po),
+                                     __addSpace(pXgettext->copyright_holder),
+                                     __addSpace(pXgettext->package_name),
+                                     __addSpace(pXgettext->package_version),
+                                     __addSpace(pXgettext->msgid_bugs_address),
+                                     __addSpace(pXgettext->inputfile));
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(pBufferTextViewLineCommand), cmdline, -1);
     /* pBufferTextViewLineCommand
     pTextViewLineCommand */
@@ -675,13 +667,13 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir)
             if (!g_file_test(f, G_FILE_TEST_IS_DIR))
                 if (g_file_test(f, G_FILE_TEST_IS_EXECUTABLE))
                 {
-                    g_printf("DEBUG: fileName: %s\n", f);
+                    // g_printf("DEBUG: fileName: %s\n", f);
                     const gchar *cmdline = g_strdup_printf("file -e soft %s", f);
                     // https://cpp.hotexamples.com/examples/-/-/g_spawn_sync/cpp-g_spawn_sync-function-examples.html
                     gchar *output = NULL;
                     GError *error = NULL;
                     g_spawn_command_line_sync(cmdline, &output, NULL, 0, NULL);
-                    g_printf("DEBUG: AVANT REGEX => : |%s|\n", output);
+                    // g_printf("DEBUG: AVANT REGEX => : |%s|\n", output);
                     GMatchInfo *match_info;
                     const gchar *pattern = ":\\s{1}(\\w+)";
                     const gint match_num = 1;
@@ -692,7 +684,7 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir)
                     while (g_match_info_matches(match_info))
                     {
                         gchar *word = g_match_info_fetch(match_info, match_num);
-                        g_print("Found: |%s|\n", word);
+                        // g_print("Found: |%s|\n", word);
                         if (!g_strcmp0(word, "data"))
                             return g_strstrip(g_strdup(g_strsplit(output, ":", 0)[0]));
                         g_free(word);
@@ -706,6 +698,25 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir)
         g_dir_close(dir);
     }
     return NULL;
+}
+/**
+ * @brief ajoute un espace entre les parametres
+ * 
+ * @param paramXgettext 
+ * @return char* 
+ */
+static char *__addSpace(char *paramXgettext)
+{
+    if (paramXgettext == NULL || strlen(paramXgettext) == 0)
+    {
+        return ""; // return empty string if paramXgettext is empty
+    }
+    else
+    {
+        char *result = malloc(strlen(paramXgettext) + 2); // +1 for the space, +1 for the null terminator
+        sprintf(result, "%s ", paramXgettext);
+        return result;
+    }
 }
 
 /**
