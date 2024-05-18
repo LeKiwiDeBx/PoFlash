@@ -217,9 +217,9 @@ static void __box_row_set_align_label_switch(GtkWidget *pBoxRow, GtkWidget *pLab
 
 /**
  * @brief ajoute un espace dans une chaine si non vide
- * 
- * @param paramXgettext 
- * @return char* 
+ *
+ * @param paramXgettext
+ * @return char*
  */
 static char *__addSpace(char *paramXgettext);
 
@@ -501,6 +501,46 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
     gtk_widget_show(pDialogBoxQuit);
 }
 
+// #include <gio/gio.h>
+
+/**
+ * @brief Get the mime type of a file
+ *
+ * @param filename The name of the file
+ * @return The mime type of the file, or NULL if an error occurs
+ */
+
+const gchar *get_file_mime_type(const gchar *filename)
+{
+    // const gchar *cQuery = G_FILE_ATTRIBUTE_STANDARD_SIZE "," G_FILE_ATTRIBUTE_TIME_MODIFIED "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE "," G_FILE_ATTRIBUTE_UNIX_UID "," G_FILE_ATTRIBUTE_UNIX_GID "," G_FILE_ATTRIBUTE_ACCESS_CAN_READ "," G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE "," G_FILE_ATTRIBUTE_ACCESS_CAN_EXECUTE;
+    const gchar *cQuery = G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE;
+    GError *err = NULL;
+    // gchar *testFile = "/home/jean/PoFlash/test space.txt";
+    GFile *file = g_file_new_for_path(filename);
+    GFileInfo *info = g_file_query_info(file,
+                                        cQuery,
+                                        G_FILE_QUERY_INFO_NONE,
+                                        NULL, &err);
+    g_object_unref(file);
+    if (err)
+    {
+        g_printerr("ERROR: %s\n", err->message);
+        g_error_free(err);
+        return NULL;
+    }
+
+    if (info)
+    {
+        const gchar *mime_type = g_strdup(g_file_info_get_content_type(info)); // g_content_type_get_description g_content_type_get_mime_type
+        g_printf("DEBUG: get mime type mime_type: %s\n", g_strdup(g_file_info_get_content_type(info)));
+        g_object_unref(info);
+        return mime_type;
+    }
+    else
+    {
+        return NULL;
+    }
+}
 /**
  * @brief cree une liste de fichiers venant du drag and drop
  *
@@ -520,9 +560,13 @@ static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, dou
     {
         g_printf("DEBUG: File dropped base_name: %s %s\n", G_VALUE_TYPE_NAME(value), G_VALUE_FILE_BASENAME(value));
         g_printf("DEBUG: get parse name parse_name: %s\n", G_VALUE_FILE_PARSE_NAME(value));
-        // gchar *valparsename = G_VALUE_FILE_PARSE_NAME(value); //| /path/du/fichier/filename.ext   tout
-        gchar *valbasename = G_VALUE_FILE_BASENAME(value); //| filename.ext                    nom du fichier
-        gchar *valpath = G_VALUE_FILE_PATH(value);         //| /path/du/repertoire             path seulement
+        // debug
+
+        ;
+        gchar *valparsename = G_VALUE_FILE_PARSE_NAME(value); //| /path/du/fichier/filename.ext   tout
+        gchar *valbasename = G_VALUE_FILE_BASENAME(value);    //| filename.ext                    nom du fichier
+        g_printf("DEBUG LEVEL ON DROP: get mime type mime_type: %s\n", get_file_mime_type(valparsename));
+        gchar *valpath = G_VALUE_FILE_PATH(value); //| /path/du/repertoire             path seulement
         listFile = g_list_append(listFile, valbasename);
         g_printf("DEBUG: path dropped path: %s\n", valpath);
         GString *buf = g_string_new("");
@@ -701,9 +745,9 @@ static gchar *__getPackageGuessIntoDir(const gchar *pDir)
 }
 /**
  * @brief ajoute un espace entre les parametres
- * 
- * @param paramXgettext 
- * @return char* 
+ *
+ * @param paramXgettext
+ * @return char*
  */
 static char *__addSpace(char *paramXgettext)
 {
