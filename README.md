@@ -117,6 +117,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 - [gettext](https://www.gnu.org/software/gettext/) for providing the internationalization and localization system.
 - [GTK4](https://www.gtk.org/) for the graphical toolkit.
-- [Person 1](https://github.com/person1) for initial development and contributions.
 
 Feel free to open an issue or submit a pull request for any improvements or bug fixes. Thank you for your interest and contribution!
