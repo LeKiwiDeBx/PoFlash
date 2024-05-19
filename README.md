@@ -1,6 +1,6 @@
 # PoFlash
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/GPL-3.0.svg)](LICENSE)
 [![Build Status](https://img.shields.io/travis/username/PoFlash.svg)](https://travis-ci.org/username/PoFlash)
 [![Coverage Status](https://coveralls.io/repos/github/username/PoFlash/badge.svg?branch=main)](https://coveralls.io/github/username/PoFlash?branch=main)
 
