@@ -1,6 +1,5 @@
 # PoFlash
 
-[![License](https://github.com/LeKiwiDeBx/PoFlash/tree/main?tab=GPL-3.0-1-ov-file)
 [![Build Status](https://img.shields.io/travis/username/PoFlash.svg)](https://travis-ci.org/username/PoFlash)
 [![Coverage Status](https://coveralls.io/repos/github/username/PoFlash/badge.svg?branch=main)](https://coveralls.io/github/username/PoFlash?branch=main)
 
