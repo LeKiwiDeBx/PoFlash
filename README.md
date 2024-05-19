@@ -20,7 +20,7 @@
 ## Overview
 
 PoFlash is a utility designed to streamline the creation of localization files for translators.\
-Utilizing the gettext system, PoFlash allows for quick generation of POT, PO, and MO files.\ 
+Utilizing the gettext system, PoFlash allows for quick generation of POT, PO, and MO files.\
 The program features a graphical user interface built with GTK4 (development version 4.6.9) and is written in C. 
 PoFlash's command-line capabilities can be modified, copied, and pasted into a terminal for execution.
 
