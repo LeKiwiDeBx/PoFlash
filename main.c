@@ -54,6 +54,28 @@
 #define MSG_ID_BUGS_ADDRESS_PLACEHOLDER _("Email@Address")
 #define OUTPUT_DIR_DEFAULT "locale"
 #define ADD_COMMENTS_DEFAULT "TRANSLATORS"
+// MODEL VIEW  IMPLEMENTATION
+/* definition pour l'item du Model View */
+
+typedef struct _FileListData
+{
+    GListStore *store;
+    GtkImage *delete_icon;
+} FileListData;
+
+static GList *listFile = NULL;
+
+/* creation d'un GType */
+#define FILE_LIST_ITEM_TYPE (file_list_item_get_type())
+G_DECLARE_FINAL_TYPE(FileListItem, file_list_item, FILE, LIST_ITEM, GObject)
+typedef struct _FileListItem
+{
+    GObject parent_instance;
+    gchar *filename;
+    gchar *file_type;
+
+} FileListItem;                                            // doit etre declare avant G_DEFINE_TYPE
+G_DEFINE_TYPE(FileListItem, file_list_item, G_TYPE_OBJECT) // cast avec FILE_LIST_ITEM check avec FILE_LIST_IS_ITEM
 
 /* application instance */
 GtkApplication *app;
@@ -75,6 +97,27 @@ GtkWidget *pEntryMsgIdBugsAddress;
 GtkWidget *pTextViewLineCommand;
 /* buffer for line command xgettext*/
 GtkTextBuffer *pBufferTextViewLineCommand;
+/* zone scrollable pour listview */
+GtkWidget *pSw;
+/* pour listview */
+GtkWidget *pListView;
+/* model pour listview */
+GListModel *model;
+
+/* // definition pour l'item du Model View
+typedef struct
+{
+    gchar *filename;
+    gchar *file_type;
+    GdkPaintable *delete_icon;
+} FileListItem;
+
+typedef struct
+{
+    GListStore *store;
+    GdkPaintable *delete_icon;
+} FileListData;
+ */
 /**
  * @brief Appel pour fin d'application
  * @param pWidget appele par les boutons quit et fermeture fenetre
@@ -224,6 +267,14 @@ static void __box_row_set_align_label_switch(GtkWidget *pBoxRow, GtkWidget *pLab
 static char *__addSpace(char *paramXgettext);
 
 /**
+ * @brief retourne le mime type d'un fichier
+ *
+ * @param filename
+ * @return const gchar*
+ */
+static const gchar *__get_file_mime_type(const gchar *filename);
+
+/**
  * @brief OnDrop sur l´image pour enregistrer un fichier ou des fichiers dans pXgettext
  *
  * @param target
@@ -238,6 +289,75 @@ static gboolean OnDrop(GtkDropTarget *target,
                        double x,
                        double y,
                        gpointer data);
+/**
+ * @brief Create a file list model object
+ *
+ * @param file_list
+ * @param delete_icon
+ * @return * GListModel*
+ */
+static GListModel *create_file_list_model(GList *file_list, GtkImage *delete_icon);
+
+/**
+ * @brief Create a file list view objectmake
+ *
+ * @param model
+ * @param delete_icon
+ * @return GtkWidget*
+ */
+static GtkWidget *create_file_list_view(GListModel *model, GtkImage *delete_icon);
+
+/**
+ * @brief Create a file list data object
+ *
+ * @param store
+ * @param delete_icon
+ * @return FileListData*
+ */
+static FileListData *create_file_list_data(GListStore *store, GtkImage *delete_icon);
+/**
+ * @brief Set the up file list item object
+ *
+ * @param factory
+ * @param list_item
+ */
+
+static void setup_file_list_item(GtkSignalListItemFactory *factory,
+                                 GtkListItem *list_item);
+/**
+ * @brief Create a file list factory object
+ *
+ * @param delete_icon
+ * @param store
+ * @return GtkListItemFactory*
+ */
+static GtkListItemFactory *create_file_list_factory(GtkImage *delete_icon, GListStore *store);
+
+/**
+ * @brief Bind a file list item
+ *
+ * @param factory
+ * @param list_item
+ */
+static void bind_file_list_item(GtkSignalListItemFactory *factory,
+                                GtkListItem *list_item);
+
+/**
+ * @brief Delete a file list item
+ *
+ * @param item
+ * @param store
+ */
+static void delete_file(FileListItem *item, GListStore *store);
+
+/**
+ * @brief Add a file list item
+ *
+ * @param store
+ * @param filename
+ * @param delete_icon
+ */
+static void add_file(GListStore *store,  GFile *filename);
 
 /**
  * @brief build de l'application a la creation
@@ -402,8 +522,27 @@ activate(GtkApplication *app,
     gtk_text_view_set_justification(GTK_TEXT_VIEW(pTextViewLineCommand), GTK_JUSTIFY_LEFT);
     gtk_grid_attach(GTK_GRID(pGridMain), pTextViewLineCommand, 0, 3, 5, 1);
 
+    pSw = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(pSw), 200);
+    // gtk_window_set_child(GTK_WINDOW(pWindowMain), pSw);
+    gtk_grid_attach(GTK_GRID(pGridMain), pSw, 0, 4, 5, 4);
+    GtkWidget *delete_icon = gtk_image_new_from_file("/home/jean/PoFlash/image/delete2.png");
+
+    model = create_file_list_model(listFile, GTK_IMAGE(delete_icon));
+    pListView = create_file_list_view(model, GTK_IMAGE(delete_icon));
+
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(pSw), pListView);
+
     __poflashLoadCss();
     gtk_window_present(GTK_WINDOW(pWindowMain));
+}
+// Create a function to allocate and initialize this structure:
+static FileListData *create_file_list_data(GListStore *store, GtkImage *delete_icon)
+{
+    FileListData *data = g_new(FileListData, 1);
+    data->store = g_object_ref(store);
+    data->delete_icon = g_object_ref(delete_icon);
+    return data;
 }
 
 /**
@@ -500,8 +639,271 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
     g_signal_connect(GTK_WIDGET(pDialogBoxQuit), "response", G_CALLBACK(OnResponse), NULL);
     gtk_widget_show(pDialogBoxQuit);
 }
+////////////////////////////////////////////////////////////////////
+// 1 Define a custom model struct that holds the data for each row:
+/* typedef struct
+{
+    gchar *filename;
+    gchar *file_type;
+    GdkPaintable *delete_icon;
+} FileListItem; */
 
-// #include <gio/gio.h>
+// 2 Create a GListModel and populate it with your data:
+static GListModel *create_file_list_model(GList *file_list, GtkImage *delete_icon)
+{
+    GListStore *store = g_list_store_new(FILE_LIST_ITEM_TYPE); // create a GListStore G_TYPE_OBJECT FILE_LIST_ITEM_TYPE
+    // for (GList *l = file_list; l != NULL; l = l->next)
+    // {
+    //     const gchar *filename = (const gchar *)l->data; // Glist contient juste le nom du fichier
+    //     const gchar *file_type = __get_file_mime_type(filename);
+    //     FileListItem *item = g_new(FileListItem, 1); // g_new genere un pointeur sur la structure FileListItem
+    //     item->filename = g_strdup(filename);
+    //     item->file_type = g_strdup(file_type);
+    //     item->delete_icon = g_object_ref(delete_icon);
+    //     g_list_store_append(store, item);
+    // }
+    return G_LIST_MODEL(store);
+}
+/*
+This macro defines a new GTypecalled FILE_LIST_ITEM_TYPE and provides
+the necessary functions to create and manage instances of the
+FileListItem structure.
+*/
+static void
+file_list_item_init(FileListItem *self)
+{
+    self->filename = NULL;
+    self->file_type = NULL;
+}
+
+static void
+file_list_item_class_init(FileListItemClass *class)
+{
+}
+
+static FileListItem *list_item_new(GType type,  GFile *file)
+{
+    FileListItem *item = g_object_new(type, NULL);
+    item->filename = g_strdup(g_file_get_basename(file));
+    g_printf("filename %s\n", item->filename);
+    item->file_type = g_strdup(__get_file_mime_type(g_file_get_parse_name(file)));
+    return item;
+}
+// Don't forget to free the FileListItem instances
+// when they are no longer needed:
+static void free_file_list_item(gpointer data)
+{
+    FileListItem *item = (FileListItem *)data;
+    g_free(item->filename);
+    g_free(item->file_type);
+
+    g_object_unref(item);
+}
+
+// Create a GtkListView and set up its factory:
+static GtkWidget *create_file_list_view(GListModel *model, GtkImage *delete_icon)
+{
+    GtkWidget *list_view = gtk_list_view_new(GTK_SELECTION_MODEL(gtk_single_selection_new(model)),
+                                             create_file_list_factory(
+                                                 delete_icon,
+                                                 G_LIST_STORE(model)));
+    gtk_list_view_set_show_separators(GTK_LIST_VIEW(list_view), TRUE);
+    return list_view;
+}
+// Implement the setup_file_list_item  function to create the widgets for each row:
+/* static GtkListItemFactory *create_file_list_factory(GdkPaintable *delete_icon)
+{
+    GtkListItemFactory *factory = gtk_signal_list_item_factory_new(); ////// setup and bind event handlers
+                                                                      // g_signal_connect(factory,"activate",G_CALLBACK(activate),NULL);
+                                                                      // create file list model? activate_cb
+    gtk_signal_list_item_factory_add_handler_callback(                ////////////////////////NO COMPRENDO
+        factory,
+        (GtkListItemFactorySetupFunc)setup_file_list_item,
+        delete_icon,
+        NULL);
+
+    return factory;
+} */
+
+// Implement the setup_file_list_item  function to create the widgets for each row:   here the setup?
+/* static void setup_file_list_item(GtkSignalListItemFactory *factory,
+                                 GtkListItem *list_item,
+                                 GdkPaintable *delete_icon)
+{
+    FileListItem *item = gtk_list_item_get_item(list_item);
+
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_list_item_set_child(list_item, box);
+
+    GtkWidget *filename_label = gtk_label_new(item->filename);
+    gtk_box_append(GTK_BOX(box), filename_label);
+
+    GtkWidget *type_label = gtk_label_new(item->file_type);
+    gtk_box_append(GTK_BOX(box), type_label);
+
+    GtkWidget *delete_button = gtk_button_new();
+    gtk_button_set_icon(GTK_BUTTON(delete_button), delete_icon);
+    gtk_box_append(GTK_BOX(box), delete_button);
+
+    g_signal_connect_swapped(delete_button, "clicked", G_CALLBACK(delete_file), item);
+} */
+static void setup_file_list_item(GtkSignalListItemFactory *factory,
+                                 GtkListItem *list_item) // FileListData *data
+{
+    FileListItem *item = gtk_list_item_get_item(list_item);
+
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_list_item_set_child(list_item, box);
+
+    GtkWidget *filename_label = gtk_label_new("");
+    gtk_box_append(GTK_BOX(box), filename_label);
+
+    GtkWidget *type_label = gtk_label_new("");
+    gtk_box_append(GTK_BOX(box), type_label);
+    
+    /*
+        // GtkWidget *delete_button = gtk_button_new();
+        // gtk_button_set_icon(GTK_BUTTON(delete_button), item->delete_icon); //data->delete_icon
+        /*  GtkWidget *delete_icon = gtk_image_new_from_paintable(item->delete_icon);
+         gtk_button_set_child(GTK_BUTTON(delete_button), delete_icon); */
+    // gtk_box_append(GTK_BOX(box), delete_button);
+
+    // g_signal_connect_swapped(delete_button, "clicked", G_CALLBACK(delete_file), item);
+}
+
+// Implement the delete_file  function to handle the delete button click:
+static void delete_file(FileListItem *item, GListStore *store)
+{
+    guint position = 0;
+    gboolean found = g_list_store_find(store, item, &position);
+
+    if (found)
+    {
+        g_list_store_remove(store, position);
+        free_file_list_item(item);
+    }
+}
+// Create helper functions item_copy and item_free_full to manage the memory of the FileListItem
+//  and the GListStore reference:
+static FileListItem *item_copy(FileListItem *item, GListStore *store)
+{
+    FileListItem *copy = g_memdup2(item, sizeof(FileListItem));
+    /*  copy->store = g_object_ref(store);*/
+    return copy;
+}
+
+static void item_free_full(FileListItem *item)
+{
+    g_free(item->filename);
+    g_free(item->file_type);
+
+    /*  if (item->store)
+     {
+         g_object_unref(item->store);
+     } */
+    g_free(item);
+}
+
+static void free_file_list_data(gpointer data)
+{
+    FileListData *list_data = (FileListData *)data;
+    g_object_unref(list_data->store);
+
+    g_free(list_data);
+}
+
+// Update thecreate_file_list_factory function to pass the GListStore to the
+// setup_file_list_item  function:
+static GtkListItemFactory *create_file_list_factory(GtkImage *delete_icon, GListStore *store)
+{
+    GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
+    // FileListData *data = create_file_list_data(store, delete_icon);
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_file_list_item), NULL); // data a la place de NULL
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_file_list_item), NULL);   // data
+    return factory;
+}
+/*
+To implement the bind_file_list_item function, you need to create a binding between the FileListItem
+ data and the widgets in the list item. This binding ensures that when the data changes, the widgets are updated automatically.
+Here's how you can implement the bind_file_list_item function:
+*/
+static void bind_file_list_item(GtkSignalListItemFactory *factory,
+                                GtkListItem *list_item) // FileListData *data
+{
+   FileListItem *item = gtk_list_item_get_item(list_item);
+    GtkWidget *box = gtk_list_item_get_child(list_item);
+    GtkWidget *filename_label = gtk_widget_get_first_child(box);
+    GtkWidget *type_label = gtk_widget_get_next_sibling(filename_label); 
+    // GtkWidget *delete_button = gtk_widget_get_next_sibling(type_label);
+    gtk_label_set_label(GTK_LABEL(filename_label), item->filename);
+    gtk_label_set_label(GTK_LABEL(type_label), item->file_type);
+    // g_object_bind_property() un peu optionnel ::a-priori on ne change pas, on delete - efface -  ou nouveau
+    // g_object_bind_property(item, "filename", filename_label, "label", G_BINDING_SYNC_CREATE);
+    // g_object_bind_property(item, "file_type", type_label, "label", G_BINDING_SYNC_CREATE);
+}
+
+/*
+In GTK 4, the
+GListModel
+ interface is used to provide data to the
+GtkListView
+. When the data in the model changes, you need to emit specific signals to notify the
+GtkListView
+ about the changes.
+
+The
+GListModel
+ interface defines the following signals that you can use to notify the
+GtkListView
+ about changes:
+
+items-changed:
+This signal is emitted when one or more items in the model have been changed, added,
+or removed. You should emit this signal when you modify the contents of the model.
+g_signal_emit_by_name(G_LIST_MODEL(store), "items-changed", 0, position, 0, n_items);<br>
+
+Here,
+position  is the index of the first item that changed, and
+n_items is the number of items that changed.
+cleared:
+This signal is emitted when all items in the model have been removed. You should emit this
+signal when you clear the entire model.
+g_signal_emit_by_name(G_LIST_MODEL(store), "cleared", 0);<br>
+
+
+In the case of the
+GListStore
+ used in the previous example, you can emit the
+items-changed signal when you add, remove, or modify items in the store.
+Here's an example of how you can emit the
+items-changed signal when adding a new item to the GListStore
+:*/
+static void add_file(GListStore *store,  GFile *filename)
+{
+    /* const gchar *file_type = __get_file_mime_type(filename);
+
+    FileListItem *item = g_object_new(FILE_LIST_ITEM_TYPE, NULL);
+    item->filename = g_strdup(filename);
+    item->file_type = g_strdup(file_type);
+    item->delete_icon = NULL; //g_object_ref(delete_icon); */
+
+    // g_list_store_append(store, item);
+    g_list_store_append(store, list_item_new(FILE_LIST_ITEM_TYPE, filename));
+    // g_signal_emit_by_name(G_LIST_MODEL(store), "items-changed", 0, 1, 1, 1);
+}
+/*
+In this example, after appending the new item to the GListStore, we emit the
+items-changed signal with the position of the added item and a count of 1 (since we added one item).
+
+Similarly, you can emit the items-changed signal when removing or modifying items in the
+GListStore
+.
+
+By emitting the appropriate signals, the GtkListView
+ will be notified of the changes in the model and will update its display accordingly.
+*/
+
+///////////////////////////////////////////////////////////
 
 /**
  * @brief Get the mime type of a file
@@ -509,8 +911,7 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
  * @param filename The name of the file
  * @return The mime type of the file, or NULL if an error occurs
  */
-
-const gchar *get_file_mime_type(const gchar *filename)
+static const gchar *__get_file_mime_type(const gchar *filename)
 {
     // const gchar *cQuery = G_FILE_ATTRIBUTE_STANDARD_SIZE "," G_FILE_ATTRIBUTE_TIME_MODIFIED "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE "," G_FILE_ATTRIBUTE_UNIX_UID "," G_FILE_ATTRIBUTE_UNIX_GID "," G_FILE_ATTRIBUTE_ACCESS_CAN_READ "," G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE "," G_FILE_ATTRIBUTE_ACCESS_CAN_EXECUTE;
     const gchar *cQuery = G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE;
@@ -553,7 +954,7 @@ const gchar *get_file_mime_type(const gchar *filename)
  */
 static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, double y, gpointer data)
 {
-    static GList *listFile = NULL;
+    // static GList *listFile = NULL; // liste de fichiers globale car sera dans la View  du GListModel
     xgettext_args data_xgettext_args = (struct s_xgettext_args *)data;
 
     if (G_VALUE_HOLDS(value, G_TYPE_FILE))
@@ -561,11 +962,11 @@ static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, dou
         g_printf("DEBUG: File dropped base_name: %s %s\n", G_VALUE_TYPE_NAME(value), G_VALUE_FILE_BASENAME(value));
         g_printf("DEBUG: get parse name parse_name: %s\n", G_VALUE_FILE_PARSE_NAME(value));
         // debug
-
+        add_file(G_LIST_STORE(model), G_FILE(g_value_get_object(value)));
         ;
         gchar *valparsename = G_VALUE_FILE_PARSE_NAME(value); //| /path/du/fichier/filename.ext   tout
         gchar *valbasename = G_VALUE_FILE_BASENAME(value);    //| filename.ext                    nom du fichier
-        g_printf("DEBUG LEVEL ON DROP: get mime type mime_type: %s\n", get_file_mime_type(valparsename));
+        g_printf("DEBUG LEVEL ON DROP: get mime type mime_type: %s\n", __get_file_mime_type(valparsename));
         gchar *valpath = G_VALUE_FILE_PATH(value); //| /path/du/repertoire             path seulement
         listFile = g_list_append(listFile, valbasename);
         g_printf("DEBUG: path dropped path: %s\n", valpath);
@@ -577,6 +978,8 @@ static gboolean OnDrop(GtkDropTarget *target, const GValue *value, double x, dou
         g_printf("DEBUG: buf : %s\n", (char *)buf->str);
         data_xgettext_args->inputfile = g_strdup((char *)buf->str);
         g_printf("DEBUG: pXgettext->inputfile:|%s|\n", data_xgettext_args->inputfile);
+       
+
         g_string_free(buf, TRUE);
     }
     else if (G_VALUE_HOLDS(value, GDK_TYPE_PIXBUF))

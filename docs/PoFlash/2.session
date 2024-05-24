@@ -1,0 +1,12 @@
+window_sizes 1800 945 450 1344 789 104
+cleanlooks_style
+diagrams
+  active  classdiagram_ref 128002 // PoFlash
+    1279 751 100 A4 0 0
+end
+show_stereotypes
+selected operation_ref 128002 // static GListModel *create_file_list_model(GList *file_list, GdkPaintable *delete_icon)
+open
+  class_ref 128130 // Model
+end
+end

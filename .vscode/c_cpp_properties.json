@@ -17,11 +17,11 @@
                 "${default}",
                 "/usr/include/ctype.h"
             ],
-            "compilerPath": "/usr/bin/x86_64-linux-gnu-gcc-11",
+            "compilerPath": "/usr/bin/gcc",
             /*/usr/bin/x86_64-linux-gnu-gcc-11 */
             "cStandard": "c11",
             "cppStandard": "c++14",
-            "intelliSenseMode": "linux-gcc-x64",
+            "intelliSenseMode": "${default}",
             "browse": {
                 "path": [
                     "${workspaceFolder}",

@@ -1,0 +1,137 @@
+/*
+Vous pouvez saisir ici toute règle CSS reconnue par GTK.
+Vous pouvez désactiver temporairement ce CSS personnalisé en cliquant sur le bouton « Pause » ci-dessus.
+
+Les changements sont appliqués instantanément et globalement, pour toute l’application.
+*/
+window {
+
+       background-color: #0c2939;
+}
+
+grid {
+       border-spacing: 0px;
+}
+
+box {
+       background-color: #0c2939;
+
+}
+
+box>label {
+      /* margin: 25px 25px; */
+     /*  padding: 15px 15px; */
+       font: xx-large bold;
+       color: #bb7426;
+       border-width: 1px;
+       border-style: solid;
+       border-color: #e5e5b3;
+       border-radius: 15px;
+}
+
+box>button,
+button {
+       margin: 25px 15px;
+       padding: 15px 15px;
+       font: xx-large bold;
+       color: #bb7426;
+       background-color: #4c5465;
+}
+
+box>button:hover,
+button:hover {
+       background-color: #C0C0C0;
+}
+
+button.toggle {
+
+
+       font: 2em bold;
+       color: #bb7426;
+       background-color: #4c5465;
+}
+
+entry {
+       margin: 25px 15px;
+       padding: 15px 15px;
+       font: xx-large bold;
+       color: #bb7426;
+       background-color: #4c5465;
+}
+
+grid>image {
+       /*  background-image: url("../../image/glisser-deposer.png"); */
+       background-color: #4c5465;
+
+       /*  background-size: 50px; */
+       padding: 15px 15px;
+       margin: 15px 15px;
+       border-radius: 15px;
+       border-style: dashed;
+       border-color: #bb7426;
+       border-width: 5px;
+       
+}
+tooltip {
+       margin: 0px 0px;
+       padding: 5px 5px ;
+       background-color:  #0c2939;
+       border:2px solid #bb7426 ;
+}
+tooltip>box{
+       
+       margin: 0px 0px;
+       padding: 0px 0px;
+      
+}
+tooltip>box>label {
+       color:#bb7426;
+       font: normal bold 1em Sans-Serif;
+       background-color: transparent;
+       border-color: transparent;
+       margin: 5px 5px;
+       padding: 0px 0px;
+}
+
+image:hover {
+       background-color: #C0C0C0;
+}
+box>box.horizontal{
+      margin-top: 15px;
+}
+box>box.horizontal>label{
+       margin: 0px 0px;
+       padding: 0px 10px;
+       //background-color: #C0C0C0;
+       border-color: transparent;
+       font: normal normal 1.2em Sans-Serif;
+       
+       
+}
+
+box.vertical>entry{
+       margin: 10px 0px;
+       padding: 0px 10px;
+       //background-color: #C0C0C0;
+       border-color: transparent;
+       font: normal normal 1.2em Sans-Serif;
+}
+
+textview {
+       color: lightgreen;
+       font: normal 1.8em Sans-Serif;
+       margin: 5px 10px 15px 10px;
+       border:2px solid #bb7426 ;
+       border-radius: 8px;
+}
+
+textview text {
+       background-color: black ;
+        
+}
+scrolledwindow label {
+     font: normal normal 1.2em Sans-Serif; 
+     margin: 0px 0px 0px 0px ;
+     padding: 10px 0px 10px 10px;
+     border-color: transparent;
+}
