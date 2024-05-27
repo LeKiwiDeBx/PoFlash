@@ -7,7 +7,7 @@
                 "/usr/include/**",
                 "/usr/include/gtk-4.0/gtk/**",
                 "/usr/include/gtk-4.0/gdk/**",
-                "/usr/include/glib-2.0/**"
+                "/usr/include/glib-2.0/"
                 
             ],
             "defines": [
