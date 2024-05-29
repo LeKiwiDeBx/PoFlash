@@ -1,4 +1,9 @@
-/* *
+#include </usr/include/ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+/* 
+ *
  * @file main.c
  * @author LeKiwiDeBx
  * @brief
@@ -357,7 +362,7 @@ static void bind_file_list_item(GtkSignalListItemFactory *factory,
  * @param item
  * @param store
  */
-static void delete_file(FileListItem *item, GListStore *store);
+static gboolean delete_file(GtkGesture* self, gint n_press, gdouble x, gdouble y,FileListItem *item); //GListStore *store
 
 /**
  * @brief Add a file list item
@@ -537,7 +542,7 @@ activate(GtkApplication *app,
     gtk_grid_attach(GTK_GRID(pGridMain), pSw, 0, 4, 5, 4);
     /* delete_icon = gtk_image_new_from_file("/home/jean/PoFlash/image/delete2.png");
     delete_image = gtk_image_new_from_file("/home/jean/PoFlash/image/delete2.png"); */
-   
+
     gtk_widget_set_size_request(GTK_WIDGET(delete_image), 25, 25);
     model = create_file_list_model(listFile, NULL);
     pListView = create_file_list_view(model, NULL);
@@ -650,16 +655,8 @@ void OnDestroy(GtkWidget *pWidget, gpointer pData)
     g_signal_connect(GTK_WIDGET(pDialogBoxQuit), "response", G_CALLBACK(OnResponse), NULL);
     gtk_widget_show(pDialogBoxQuit);
 }
-////////////////////////////////////////////////////////////////////
-// 1 Define a custom model struct that holds the data for each row:
-/* typedef struct
-{
-    gchar *filename;
-    gchar *file_type;
-    GdkPaintable *delete_icon;
-} FileListItem; */
 
-// 2 Create a GListModel and populate it with your data:
+//////////////////////////////// MODEL VIEW IMPLEMENTATION //////////////////////////////////////////
 static GListModel *create_file_list_model(GList *file_list, GdkPaintable *image)
 {
     GListStore *store = g_list_store_new(FILE_LIST_ITEM_TYPE); // create a GListStore G_TYPE_OBJECT FILE_LIST_ITEM_TYPE
@@ -675,16 +672,13 @@ static GListModel *create_file_list_model(GList *file_list, GdkPaintable *image)
     // }
     return G_LIST_MODEL(store);
 }
-/*
-This macro defines a new GTypecalled FILE_LIST_ITEM_TYPE and provides
-the necessary functions to create and manage instances of the
-FileListItem structure.
-*/
+
 static void
 file_list_item_init(FileListItem *self)
 {
     self->filename = NULL;
     self->file_type = NULL;
+    self->image = NULL;
 }
 
 static void
@@ -698,13 +692,13 @@ static FileListItem *list_item_new(GType type, GFile *file, GdkPaintable *image)
     item->filename = g_strdup(g_file_get_basename(file));
     g_printf("filename %s\n", item->filename);
     item->file_type = g_strdup(__get_file_mime_type(g_file_get_parse_name(file)));
-    //ici cree image
-    GdkPaintable *image_delete =  gtk_image_get_paintable(GTK_IMAGE(gtk_image_new_from_file("/home/jean/PoFlash/image/delete2.png")));
+// ici cree image debug
+#define IMAGE_CURRENT "/home/jean/PoFlash/image/delete2.png"
+    GdkPaintable *image_delete = gtk_image_get_paintable(GTK_IMAGE(gtk_image_new_from_file(IMAGE_CURRENT)));
     item->image = g_object_ref(image_delete);
     return item;
 }
-// Don't forget to free the FileListItem instances
-// when they are no longer needed:
+
 static void free_file_list_item(gpointer data)
 {
     FileListItem *item = (FileListItem *)data;
@@ -714,7 +708,6 @@ static void free_file_list_item(gpointer data)
     g_object_unref(item);
 }
 
-// Create a GtkListView and set up its factory:
 static GtkWidget *create_file_list_view(GListModel *model, GdkPaintable *image)
 {
     GtkWidget *list_view = gtk_list_view_new(GTK_SELECTION_MODEL(gtk_single_selection_new(model)),
@@ -724,47 +717,10 @@ static GtkWidget *create_file_list_view(GListModel *model, GdkPaintable *image)
     gtk_list_view_set_show_separators(GTK_LIST_VIEW(list_view), TRUE);
     return list_view;
 }
-// Implement the setup_file_list_item  function to create the widgets for each row:
-/* static GtkListItemFactory *create_file_list_factory(GdkPaintable *delete_icon)
-{
-    GtkListItemFactory *factory = gtk_signal_list_item_factory_new(); ////// setup and bind event handlers
-                                                                      // g_signal_connect(factory,"activate",G_CALLBACK(activate),NULL);
-                                                                      // create file list model? activate_cb
-    gtk_signal_list_item_factory_add_handler_callback(                ////////////////////////NO COMPRENDO
-        factory,
-        (GtkListItemFactorySetupFunc)setup_file_list_item,
-        delete_icon,
-        NULL);
-
-    return factory;
-} */
-
-// Implement the setup_file_list_item  function to create the widgets for each row:   here the setup?
-/* static void setup_file_list_item(GtkSignalListItemFactory *factory,
-                                 GtkListItem *list_item,
-                                 GdkPaintable *delete_icon)
-{
-    FileListItem *item = gtk_list_item_get_item(list_item);
-
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
-    gtk_list_item_set_child(list_item, box);
-
-    GtkWidget *filename_label = gtk_label_new(item->filename);
-    gtk_box_append(GTK_BOX(box), filename_label);
-
-    GtkWidget *type_label = gtk_label_new(item->file_type);
-    gtk_box_append(GTK_BOX(box), type_label);
-
-    GtkWidget *delete_button = gtk_button_new();
-    gtk_button_set_icon(GTK_BUTTON(delete_button), delete_icon);
-    gtk_box_append(GTK_BOX(box), delete_button);
-
-    g_signal_connect_swapped(delete_button, "clicked", G_CALLBACK(delete_file), item);
-} */
 
 static void setup_file_list_item(GtkSignalListItemFactory *factory,
                                  GtkListItem *list_item,
-                                 gpointer data) // FileListData *data
+                                 gpointer data)
 {
     FileListItem *item = gtk_list_item_get_item(list_item);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -772,23 +728,32 @@ static void setup_file_list_item(GtkSignalListItemFactory *factory,
     GtkWidget *filename_label = gtk_label_new("");
     gtk_box_append(GTK_BOX(box), filename_label);
     GtkWidget *type_label = gtk_label_new("");
-    gtk_box_append(GTK_BOX(box), type_label); 
+    gtk_box_append(GTK_BOX(box), type_label);
     GtkWidget *image = gtk_image_new_from_paintable(NULL);
-    gtk_box_append(GTK_BOX(box), image );
+    gtk_box_append(GTK_BOX(box), image);
     // g_signal_connect_swapped(delete_button, "clicked", G_CALLBACK(delete_file), item);
 }
 
 // Implement the delete_file  function to handle the delete button click:
-static void delete_file(FileListItem *item, GListStore *store)
+static gboolean delete_file(GtkGesture* self, gint n_press, gdouble x, gdouble y,FileListItem *item) //, GListStore *kkkkstore
 {
-    guint position = 0;
-    gboolean found = g_list_store_find(store, item, &position);
+    g_printf("DEBUG :: delete_file %s\n", item->filename);
 
-    if (found)
+    guint position = 0;
+    if (G_LIST_STORE(model) != NULL && item != NULL) {
+     gboolean found = g_list_store_find(G_LIST_STORE(model), item, &position);
+     g_printf("DEBUG :: found %d\n", found);
+     g_printf("DEBUG :: position %d\n", position);
+
+     
+     if (found)
     {
-        g_list_store_remove(store, position);
-        free_file_list_item(item);
+        g_list_store_remove(G_LIST_STORE(model), position);
+        // free_file_list_item(item);
+        
+    } 
     }
+    return GDK_EVENT_STOP;
 }
 // Create helper functions item_copy and item_free_full to manage the memory of the FileListItem
 //  and the GListStore reference:
@@ -803,7 +768,7 @@ static void item_free_full(FileListItem *item)
 {
     g_free(item->filename);
     g_free(item->file_type);
-
+    g_free(item->image);
     /*  if (item->store)
      {
          g_object_unref(item->store);
@@ -815,37 +780,53 @@ static void free_file_list_data(gpointer data)
 {
     FileListData *list_data = (FileListData *)data;
     g_object_unref(list_data->store);
-
     g_free(list_data);
 }
 
-// Update thecreate_file_list_factory function to pass the GListStore to the
-// setup_file_list_item  function:
 static GtkListItemFactory *create_file_list_factory(GdkPaintable *image, GListStore *store)
 {
     GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-    g_signal_connect(factory, "setup", G_CALLBACK(setup_file_list_item), NULL); // data a la place de NULL
-    g_signal_connect(factory, "bind", G_CALLBACK(bind_file_list_item), NULL);             // data
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_file_list_item), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_file_list_item), NULL);
     return factory;
 }
-/*
-To implement the bind_file_list_item function, you need to create a binding between the FileListItem
- data and the widgets in the list item. This binding ensures that when the data changes, the widgets are updated automatically.
-Here's how you can implement the bind_file_list_item function:
-*/
+
 static void bind_file_list_item(GtkSignalListItemFactory *factory,
                                 GtkListItem *list_item,
-                                gpointer data) // FileListData *data
+                                gpointer data)
 {
     FileListItem *item = gtk_list_item_get_item(list_item);
     GtkWidget *box = gtk_list_item_get_child(list_item);
     GtkWidget *filename_label = gtk_widget_get_first_child(box);
     GtkWidget *type_label = gtk_widget_get_next_sibling(filename_label);
     GtkWidget *image = gtk_widget_get_next_sibling(type_label);
-    gtk_label_set_label(GTK_LABEL(filename_label), g_strdup_printf("%-10s", g_strconcat(item->filename,NULL)));
+    gtk_label_set_label(GTK_LABEL(filename_label), g_strdup_printf("%-10s", g_strconcat(item->filename, NULL)));
     gtk_label_set_label(GTK_LABEL(type_label), item->file_type);
-    gtk_image_set_from_paintable(GTK_IMAGE(image),item->image);
+    gtk_image_set_from_paintable(GTK_IMAGE(image), item->image);
     gtk_box_set_homogeneous(GTK_BOX(box), TRUE);
+    // gtk_widget_add_controller(image, gtk_image_controller_new());
+    /*     https://stackoverflow.com/questions/76583553/how-to-use-eventcontroller-in-gtk4
+
+static gboolean
+gesture_released_cb (GtkWidget *widget)
+{
+  g_warning ("do something");
+
+  return GDK_EVENT_STOP;
+}
+    gesture = gtk_gesture_click_new ();
+
+  g_signal_connect_object (gesture, "released",
+                           G_CALLBACK (gesture_released_cb),
+                           box, G_CONNECT_SWAPPED);
+  gtk_widget_add_controller (label, GTK_EVENT_CONTROLLER (gesture));
+    */
+    GtkGesture *gesture_click = gtk_gesture_click_new();
+    gtk_widget_add_controller(GTK_WIDGET(image), GTK_EVENT_CONTROLLER(gesture_click));
+    // g_signal_connect_swapped(gesture_click, "released", G_CALLBACK(delete_file), item);  //released
+g_signal_connect(gesture_click, "released", G_CALLBACK(delete_file), G_OBJECT(item));  // released
+    // g_signal_connect_swapped(gesture_click, "released", G_CALLBACK(g_object_unref), item);
+    // g_signal_connect(G_OBJECT(image), "clicked", G_CALLBACK(delete_file), item);
     // g_object_bind_property() un peu optionnel ::a-priori on ne change pas, on delete - efface -  ou nouveau
     // g_object_bind_property(item, "filename", filename_label, "label", G_BINDING_SYNC_CREATE);
     // g_object_bind_property(item, "file_type", type_label, "label", G_BINDING_SYNC_CREATE);
@@ -898,7 +879,7 @@ static void add_file(GListStore *store, GFile *filename, GdkPaintable *image)
 
     // g_list_store_append(store, item);
     g_list_store_append(store, list_item_new(FILE_LIST_ITEM_TYPE, filename, image));
-    // g_signal_emit_by_name(G_LIST_MODEL(store), "items-changed", 0, 1, 1, 1);
+    g_signal_emit_by_name(G_LIST_MODEL(store), "items-changed", 0, 1, 1, 1);
 }
 /*
 In this example, after appending the new item to the GListStore, we emit the

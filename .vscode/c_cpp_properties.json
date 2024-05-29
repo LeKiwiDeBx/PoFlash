@@ -1,36 +1,32 @@
-{
+{"env": {
+    "myIncludePath": ["${workspaceFolder}/include", "${workspaceFolder}/src"],
+    "myDefines": ["DEBUG", "MY_FEATURE=1"]
+  },
+
     "configurations": [
         {
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/**",
-                "/usr/include/gtk-4.0/gtk/**",
-                "/usr/include/gtk-4.0/gdk/**",
-                "/usr/include/glib-2.0/"
-                
+               
             ],
             "defines": [
                 "${default}"
             ],
             "forcedInclude": [
                 "${default}",
-                "/usr/include/ctype.h"
+                
             ],
             "compilerPath": "/usr/bin/gcc",
-            /*/usr/bin/x86_64-linux-gnu-gcc-11 */
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "${default}",
             "browse": {
                 "path": [
                     "${workspaceFolder}",
-                    "/usr/include/",
-                    "/usr/include/gtk-4.0/gtk/",
-                    "/usr/include/gtk-4.0/gdk/",
-                    "/usr/include/glib-2.0/"
+                    "/usr/include/"
                 ],
-                "limitSymbolsToIncludedHeaders": true
+                "limitSymbolsToIncludedHeaders": false
             },
             "mergeConfigurations": true,
             "configurationProvider": "ms-vscode.makefile-tools"
