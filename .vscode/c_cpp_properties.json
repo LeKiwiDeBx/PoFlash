@@ -7,14 +7,14 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/**"
                
             ],
             "defines": [
                 "${default}"
             ],
             "forcedInclude": [
-                "${default}",
+                "${default}"
                 
             ],
             "compilerPath": "/usr/bin/gcc",

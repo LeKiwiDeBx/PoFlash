@@ -157,3 +157,15 @@ box.vertical>entry {
 image:hover {
        /* background-color: #C0C0C0; */
 }
+
+scrolledwindow label {
+       font: normal normal 1.2em Sans-Serif;
+       margin: 0px 0px 0px 0px;
+       padding: 10px 0px 10px 10px;
+       border-color: transparent;
+}
+
+listview image {
+       padding: 10px 0px 10px 0px;
+
+}
