@@ -48,6 +48,7 @@
 #define POFLASH_THEME_FILE "custom.css"
 #define POFLASH_THEME_PATH "theme/css/"
 #define POFLASH_PICTURE_DRAG_AND_DROP "image/glisser-deposer.png"
+#define IMAGE_CURRENT "/home/jean/PoFlash/image/delete2.png"
 
 #define G_VALUE_FILE_BASENAME(value) (g_file_get_basename(G_FILE(g_value_get_object(value))))
 #define G_VALUE_FILE_PARSE_NAME(value) (g_file_get_parse_name(G_FILE(g_value_get_object(value))))
@@ -144,6 +145,15 @@ static void OnResponse(GtkWidget *pWidget, gint response_id, gpointer data);
 static void OnClickXgettext(GtkWidget *pWidget, gpointer data);
 
 /**
+ * @brief Appel pour lancer un editeur de text sur le fichier .pot
+ * pour creer un fichier po d'une langue choisit
+ *
+ * @param pWidget
+ * @param data
+ */
+static void OnClickCreatePo(GtkWidget *pWidget, gpointer data);
+
+/**
  * @brief  active le switch pour l'option --from-code
  *
  * @param pWidget self
@@ -220,6 +230,22 @@ static gboolean OnSwitchAddComments(GtkWidget *pWidget, gboolean state, gpointer
  */
 
 static gchar *__getPackageGuessIntoDir(const gchar *pDir);
+
+/**
+ * @brief ouvre la boite de dialogue pour choisir la langue de l'output
+ *
+ */
+static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data);
+
+/**
+ * @brief manage response of Dialog box lang
+ *
+ * @param pDialogBoxLang
+ * @param response_id
+ * @param data
+ */
+static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer data);
+
 #define PACKAGE_NAME_DEFAULT __getPackageGuessIntoDir(".")
 #define FILE_EXTENSION_POT ".pot"
 #define OUTPUT_DEFAULT g_strconcat(PACKAGE_NAME_DEFAULT, FILE_EXTENSION_POT, NULL)
@@ -363,6 +389,17 @@ static gboolean delete_file(GtkGesture *self, gint n_press, gdouble x, gdouble y
  */
 static void add_file(GListStore *store, GFile *filename, GdkPaintable *image);
 
+/**
+ * @brief when items changed remove or add
+ *
+ * @param self
+ * @param position
+ * @param removed
+ * @param added
+ * @param user_data
+ */
+static void items_changed_file(GListModel *self, guint position, guint removed, guint added, gpointer user_data);
+
 xgettext_args pXgettext = NULL;
 /**
  * @brief build de l'application a la creation
@@ -501,6 +538,7 @@ activate(GtkApplication *app,
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonXgettext, 0, 2, 1, 1);
 
     GtkWidget *pButtonCreatePo = gtk_button_new_with_label(_(/*NOTHING:pas DeBlaBla*/ "Create po"));
+    g_signal_connect(G_OBJECT(pButtonCreatePo), "clicked", G_CALLBACK(OpenDialogBoxLang), NULL);
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonCreatePo, 1, 2, 1, 1);
 
     GtkWidget *pButtonMakePo = gtk_button_new_with_label(_("Make mo"));
@@ -678,8 +716,6 @@ static FileListItem *list_item_new(GType type, GFile *file, GdkPaintable *image)
     item->filename = g_strdup(g_file_get_basename(file));
     g_printf("filename %s\n", item->filename);
     item->file_type = g_strdup(__get_file_mime_type(g_file_get_parse_name(file)));
-// ici cree image debug
-#define IMAGE_CURRENT "/home/jean/PoFlash/image/delete2.png"
     GdkPaintable *image_delete = gtk_image_get_paintable(GTK_IMAGE(gtk_image_new_from_file(IMAGE_CURRENT)));
     item->image = g_object_ref(image_delete);
     return item;
@@ -728,7 +764,6 @@ static gboolean delete_file(GtkGesture *self, gint n_press, gdouble x, gdouble y
         if (found)
         {
             g_list_store_remove(G_LIST_STORE(model), position);
-            // g_signal_emit_by_name(G_LIST_MODEL(model), "items-changed", 0, position, 0, 0);
             GString *buf = g_string_new("");
             for (GList *l = listFile; l; l = l->next)
             {
@@ -792,15 +827,23 @@ static void bind_file_list_item(GtkSignalListItemFactory *factory,
     gtk_label_set_label(GTK_LABEL(type_label), item->file_type);
     gtk_image_set_from_paintable(GTK_IMAGE(image), item->image);
     gtk_box_set_homogeneous(GTK_BOX(box), TRUE);
-
     GtkGesture *gesture_click = gtk_gesture_click_new();
     gtk_widget_add_controller(GTK_WIDGET(image), GTK_EVENT_CONTROLLER(gesture_click));
     g_signal_connect(gesture_click, "released", G_CALLBACK(delete_file), G_OBJECT(item));
+    g_signal_connect(G_LIST_MODEL(model), "items-changed", G_CALLBACK(items_changed_file), G_OBJECT(item));
 }
 static void add_file(GListStore *store, GFile *filename, GdkPaintable *image)
 {
     g_list_store_append(store, list_item_new(FILE_LIST_ITEM_TYPE, filename, image));
     // g_signal_emit_by_name(G_LIST_MODEL(store), "items-changed", 0, 1, 1, 1);
+}
+
+static void items_changed_file(GListModel *self, guint position, guint removed, guint added, gpointer user_data)
+{
+    g_printf("DEBUG: items_changed_file\n");
+    FileListItem *item = (FileListItem *)user_data;
+    g_printf("DEBUG: CHANGED ITEMS item->filename:|%s|\n", item->filename);
+    // GListModel
 }
 
 /*
@@ -853,6 +896,64 @@ By emitting the appropriate signals, the GtkListView
 */
 
 ///////////////////////////////////////////////////////////
+static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
+{ // -p -o --package-name
+    /*  pXgettext->output     // -o PoFlash.pot
+        pXgettext->output_dir // -p locale
+        pXgettext->package_name // --package-name=PoFlash */
+    //  choisr la langue lang
+
+    //  creer / ouvrir le repertoire langue locale/<lang as fr_FR>/LC_MESSAGES/
+    //  creer / ouvrir le fichier PoFlash.po avec recopie du contenu du pot
+    //  lancer soit xdg-open ou une editeur preselectionné
+    //  ouvrir le fichier package.po
+    g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
+}
+
+static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
+{
+    GtkDialogFlags flags = GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT;
+    GtkWidget *pDialogBoxLang = gtk_dialog_new_with_buttons(_("Choose language"),
+                                                            GTK_WINDOW(pWindowMain),
+                                                            flags,
+                                                            _("_Cancel"),
+                                                            GTK_RESPONSE_CANCEL,
+                                                            _("_Ok"),
+                                                            GTK_RESPONSE_OK,
+                                                            NULL);
+
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(pDialogBoxLang));
+    const char *message = _("Choose lang to translate");
+    GtkWidget *labelBoxLang = gtk_label_new(message);
+    gtk_box_append(GTK_BOX(content_area), labelBoxLang);
+    const char *langList[] = {"fr_FR", "en_US", "de_DE", "it_IT", "es_ES", NULL};
+    GtkWidget *pDropDownLang = gtk_drop_down_new_from_strings(langList);
+    GtkWidget *pSw = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(pSw), 50);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(pSw), pDropDownLang);
+    gtk_box_append(GTK_BOX(content_area), pSw);
+    g_signal_connect(GTK_WIDGET(pDialogBoxLang), "response", G_CALLBACK(OnResponseLang), (gpointer)pDropDownLang);
+    gtk_widget_show(pDialogBoxLang);
+}
+
+static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer data)
+{
+    switch (response_id)
+    {
+    case GTK_RESPONSE_OK:
+        const char *lang = gtk_string_object_get_string(gtk_drop_down_get_selected_item(GTK_DROP_DOWN(data)));
+        if (lang)
+        {
+            g_printf("DEBUG: OnResponseLang lang:|%s|\n", lang);
+            gtk_window_destroy(GTK_WINDOW(pDialogBoxLang));
+        }
+        break;
+    case GTK_RESPONSE_CANCEL:
+    default:
+        gtk_window_destroy(GTK_WINDOW(pDialogBoxLang));
+        gtk_widget_show(GTK_WIDGET(pWindowMain));
+    }
+}
 
 /**
  * @brief Get the mime type of a file
