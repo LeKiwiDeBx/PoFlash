@@ -17,18 +17,18 @@ typedef struct s_xgettext_args
                        /*  gchar *files_from; // -f get list of input files from FILE
                         gchar *directory;  // -D add DIRECTORY to list for input files search
                 */
-      /* Output file location: */
-      /*  char *default_domain; // -d use NAME.po for output (instead of messages.po) |
-      */
-       char *output;         // -o write output to specified file .po or .pot      | -d OR -o
-       
-       char *output_dir;     // -p output files will be placed in directory DIR
+                       /* Output file location: */
+                       /*  char *default_domain; // -d use NAME.po for output (instead of messages.po) |
+                        */
+      char *output;    // -o write output to specified file .po or .pot      | -d OR -o
+
+      char *output_dir; // -p output files will be placed in directory DIR
 
       /* Choice of input file language: */
       /*
       char *language;  // -L --language=name recognise the specified language (C, C++, ObjectiveC, PO,
       */
-      char *cplusplus; // -C --c++ shorthand for --language=C++ 
+      char *cplusplus; // -C --c++ shorthand for --language=C++
 
       /* Input file interpretation: */
       char *from_code; // --from-code=NAME encoding of input files (except for Python, Tcl, Glade) by default ASCII
@@ -85,4 +85,16 @@ typedef struct s_xgettext_args
       */
 } *xgettext_args;
 
+typedef struct s_msginit_args
+{
+      char *project_id_version;
+      char *po_revision_date;
+      char *last_translator;
+      char *language_team_language;
+      char *mime_version_content_type_content_transfer_encoding;
+      char *plural_forms;
+      char *input;
+      char *output_file;
+      char *locale;
+} * msginit_args;
 #endif

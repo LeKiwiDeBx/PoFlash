@@ -401,6 +401,7 @@ static void add_file(GListStore *store, GFile *filename, GdkPaintable *image);
 static void items_changed_file(GListModel *self, guint position, guint removed, guint added, gpointer user_data);
 
 xgettext_args pXgettext = NULL;
+msginit_args pMsginit = NULL;
 /**
  * @brief build de l'application a la creation
  *
@@ -412,6 +413,7 @@ activate(GtkApplication *app,
          gpointer user_data)
 {
     pXgettext = g_malloc(sizeof(struct s_xgettext_args));
+    pMsginit = g_malloc(sizeof(struct s_msginit_args));
 
     g_printf("START pXgettext->inputfile:|%p|\n", pXgettext->inputfile);
     pXgettext->inputfile = g_strdup(INPUT_FILE_CURRENT_DIR);
@@ -904,10 +906,18 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     //  choisr la langue lang
 
     //  creer / ouvrir le repertoire langue locale/<lang as fr_FR>/LC_MESSAGES/
-    //  creer / ouvrir le fichier PoFlash.po avec recopie du contenu du pot
+    //  creer / ouvrir le fichier PoFlash.po avec recopie du contenu du pot 
+    //              "Language: en_US\n" 
+    //              "PO-Revision-Date: 2024-04-29 20:27+0200\n" 
+    //              "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n" **
+    //              "Language-Team: LANGUAGE <LL@li.org>\n"        **
     //  lancer soit xdg-open ou une editeur preselectionné
     //  ouvrir le fichier package.po
     g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
+     
+    gchar *command = g_strdup_printf("msginit -l %s ", pMsginit->locale);
+    g_spawn_command_line_async(command, NULL);
+    g_free(command);
 }
 
 static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
@@ -941,10 +951,11 @@ static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer
     switch (response_id)
     {
     case GTK_RESPONSE_OK:
-        const char *lang = gtk_string_object_get_string(gtk_drop_down_get_selected_item(GTK_DROP_DOWN(data)));
-        if (lang)
+       const char *locale = gtk_string_object_get_string(gtk_drop_down_get_selected_item(GTK_DROP_DOWN(data)));
+        if (locale)
         {
-            g_printf("DEBUG: OnResponseLang lang:|%s|\n", lang);
+            g_printf("DEBUG: OnResponseLang lang:|%s|\n", locale); 
+            pMsginit->locale = g_strdup(locale);
             gtk_window_destroy(GTK_WINDOW(pDialogBoxLang));
         }
         break;

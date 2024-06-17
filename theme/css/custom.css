@@ -1,45 +1,3 @@
-/*
-Vous pouvez saisir ici toute règle CSS reconnue par GTK.
-Vous pouvez désactiver temporairement ce CSS personnalisé en cliquant sur le bouton « Pause » ci-dessus.
-
-Les changements sont appliqués instantanément et globalement, pour toute l’application.
-*/
-.color1 {
-       color: #0c2939;
-}
-
-.color2 {
-       color: #1d5191;
-}
-
-.color3 {
-       color: #bb7426;
-}
-
-.color4 {
-       color: #d1bc5b;
-}
-
-.color5 {
-       color: #e5e5b3;
-}
-
-.first-color {
-       background: #233142;
-}
-
-.second-color {
-       background: #455d7a;
-}
-
-.third-color {
-       background: #f95959;
-}
-
-.fourth-color {
-       background: #e3e3e3;
-}
-
 window {
 
        background-color: #0c2939;
@@ -55,8 +13,8 @@ box {
 }
 
 box>label {
-       margin: 25px 25px;
-       padding: 15px 15px;
+      /* margin: 25px 25px; */
+     /*  padding: 15px 15px; */
        font: xx-large bold;
        color: #bb7426;
        border-width: 1px;
@@ -67,9 +25,9 @@ box>label {
 
 box>button,
 button {
-       margin: 25px 15px;
-       padding: 15px 15px;
-       font: xx-large bold;
+       margin: 5px 5px;
+       padding: 5px 5px;
+       font-size:1.2em;
        color: #bb7426;
        background-color: #4c5465;
 }
@@ -88,9 +46,9 @@ button.toggle {
 }
 
 entry {
-       margin: 25px 15px;
-       padding: 15px 15px;
-       font: xx-large bold;
+       margin: 5px 5px;
+       padding: 5px 5px;
+       font-size: 1.2em;
        color: #bb7426;
        background-color: #4c5465;
 }
@@ -106,25 +64,22 @@ grid>image {
        border-style: dashed;
        border-color: #bb7426;
        border-width: 5px;
-
+       
 }
-
 tooltip {
        margin: 0px 0px;
-       padding: 5px 5px;
-       background-color: #0c2939;
-       border: 2px solid #bb7426;
+       padding: 5px 5px ;
+       background-color:  #0c2939;
+       border:2px solid #bb7426 ;
 }
-
-tooltip>box {
-
+tooltip>box{
+       
        margin: 0px 0px;
        padding: 0px 0px;
-
+      
 }
-
 tooltip>box>label {
-       color: #bb7426;
+       color:#bb7426;
        font: normal bold 1em Sans-Serif;
        background-color: transparent;
        border-color: transparent;
@@ -132,40 +87,56 @@ tooltip>box>label {
        padding: 0px 0px;
 }
 
-box>box.horizontal {
-       margin-top: 15px;
+image:hover {
+       background-color: #C0C0C0;
 }
-
-box>box.horizontal>label {
+box>box.horizontal{
+      margin-top: 15px;
+}
+box>box.horizontal>label{
        margin: 0px 0px;
        padding: 0px 10px;
+       //background-color: #C0C0C0;
        border-color: transparent;
        font: normal normal 1.2em Sans-Serif;
-
-
+       
+       
 }
 
-box.vertical>entry {
+box.vertical>entry{
        margin: 10px 0px;
        padding: 0px 10px;
+       //background-color: #C0C0C0;
        border-color: transparent;
        font: normal normal 1.2em Sans-Serif;
-
-
 }
 
-image:hover {
-       /* background-color: #C0C0C0; */
+textview {
+       color: lightgreen;
+       font: normal 15px Sans-Serif;
+       margin: 5px 10px 15px 10px;
+       border:1px solid #bb7426 ;
+       border-radius: 8px;
 }
 
+textview text {
+       background-color: black ;
+        
+}
 scrolledwindow label {
-       font: normal normal 1.2em Sans-Serif;
-       margin: 0px 0px 0px 0px;
-       padding: 10px 0px 10px 10px;
-       border-color: transparent;
+     font: normal normal 15px Sans-Serif; 
+     margin: 0px 0px 0px 0px ;
+     padding: 0px 0px 0px 0px;
+     border-color: transparent;
+}
+listview  {
+     padding: 10px 10px 10px 10px;
+     
 }
 
-listview image {
-       padding: 10px 0px 10px 0px;
-
+scrolledwindow  {
+ font: normal normal 15px Sans-Serif; 
+     margin: 0px 0px 0px 0px ;
+     padding: 0px 0px 0px 0px;
+     border-color: transparent;
 }

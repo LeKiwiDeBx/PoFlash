@@ -1,0 +1,112 @@
+# French translations for PoFlash package
+# Traductions françaises du paquet PoFlash.
+# Copyright (C) 2024 jean
+# This file is distributed under the same license as the PoFlash package.
+# Jean <jean@jean-aspire-x3810>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PoFlash 1.0\n"
+"Report-Msgid-Bugs-To: KiwiLang@LL.org\n"
+"POT-Creation-Date: 2024-05-18 11:43+0200\n"
+"PO-Revision-Date: 2024-06-14 12:28+0200\n"
+"Last-Translator: Jean <jean@jean-aspire-x3810>\n"
+"Language-Team: French <traduc@traduc.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: main.c:53
+msgid "Your Package Name"
+msgstr ""
+
+#: main.c:54
+msgid "Email@Address"
+msgstr ""
+
+#: main.c:294
+msgid "From code: UTF-8"
+msgstr ""
+
+#: main.c:298
+msgid "Force PO"
+msgstr ""
+
+#: main.c:302
+msgid "Package version: "
+msgstr ""
+
+#: main.c:306
+msgid "Output: "
+msgstr ""
+
+#: main.c:310
+msgid "Copyright holder: "
+msgstr ""
+
+#: main.c:314
+msgid "Language: C++ "
+msgstr ""
+
+#: main.c:318
+msgid "Output dir: ./"
+msgstr ""
+
+#: main.c:322
+msgid "Package name: "
+msgstr ""
+
+#: main.c:326
+msgid "Add comments: "
+msgstr ""
+
+#: main.c:342
+msgid "--msgid-bugs-address=EMAIL@ADDRESS set report address for msgid bugs"
+msgstr ""
+
+#: main.c:368
+msgid "Add Keyword"
+msgstr ""
+
+#: main.c:370
+msgid ""
+"-k --keyword=KEYWORD\n"
+"additional keyword to be looked for\n"
+"(without WORD means not to use\n"
+"default keywords)"
+msgstr ""
+
+#. TRANSLATORS:Think create a file .pot
+#: main.c:373
+msgid "Create pot"
+msgstr ""
+
+#: main.c:378
+msgid "Create po"
+msgstr ""
+
+#: main.c:384
+msgid "Make mo"
+msgstr ""
+
+#: main.c:387
+msgid "Quit"
+msgstr ""
+
+#: main.c:487
+msgid "Confirm QUIT"
+msgstr ""
+
+#: main.c:490
+msgid "_Cancel"
+msgstr ""
+
+#: main.c:492
+msgid "_Ok"
+msgstr ""
+
+#: main.c:497
+msgid "Do you really want to quit ?"
+msgstr ""
