@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include </usr/include/ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 /**
  * headers GTK/Glib
  */
@@ -36,6 +32,7 @@
 #include <locale.h>
 
 #include "main.h"
+#include "list-iso639-1.h"
 
 #ifndef _LINUX_
 #define _LINUX_ /* execution de system clear */
@@ -914,8 +911,9 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     //  lancer soit xdg-open ou une editeur preselectionné
     //  ouvrir le fichier package.po
     g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
-     
-    gchar *command = g_strdup_printf("msginit -l %s ", pMsginit->locale);
+    // msginit -i locale/messages.pot --locale=el_GR -o locale/el/LC_MESSAGES/messages.po 
+    gchar *command = g_strdup_printf("msginit -l %s --no-translator", pMsginit->locale); //--no-translator pour eviter la question Last translator
+    //TODO remplacer dans le fichier produit: Automatically generated par Name <adress@email.org>
     g_spawn_command_line_async(command, NULL);
     g_free(command);
 }
@@ -936,8 +934,8 @@ static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
     const char *message = _("Choose lang to translate");
     GtkWidget *labelBoxLang = gtk_label_new(message);
     gtk_box_append(GTK_BOX(content_area), labelBoxLang);
-    const char *langList[] = {"fr_FR", "en_US", "de_DE", "it_IT", "es_ES", NULL};
-    GtkWidget *pDropDownLang = gtk_drop_down_new_from_strings(langList);
+    // const char *langList[] = {"fr_FR", "en_US", "de_DE", "it_IT", "es_ES", NULL};
+    GtkWidget *pDropDownLang = gtk_drop_down_new_from_strings(languages);
     GtkWidget *pSw = gtk_scrolled_window_new();
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(pSw), 50);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(pSw), pDropDownLang);
