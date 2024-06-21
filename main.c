@@ -903,19 +903,69 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     //  choisr la langue lang
 
     //  creer / ouvrir le repertoire langue locale/<lang as fr_FR>/LC_MESSAGES/
-    //  creer / ouvrir le fichier PoFlash.po avec recopie du contenu du pot 
-    //              "Language: en_US\n" 
-    //              "PO-Revision-Date: 2024-04-29 20:27+0200\n" 
+    //  creer / ouvrir le fichier PoFlash.po avec recopie du contenu du pot
+    //              "Language: en_US\n"
+    //              "PO-Revision-Date: 2024-04-29 20:27+0200\n"
     //              "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n" **
     //              "Language-Team: LANGUAGE <LL@li.org>\n"        **
     //  lancer soit xdg-open ou une editeur preselectionné
     //  ouvrir le fichier package.po
     g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
-    // msginit -i locale/messages.pot --locale=el_GR -o locale/el/LC_MESSAGES/messages.po 
+    // msginit -i locale/messages.pot --locale=el_GR -o locale/el/LC_MESSAGES/messages.po
     gchar *command = g_strdup_printf("msginit -l %s --no-translator", pMsginit->locale); //--no-translator pour eviter la question Last translator
-    //TODO remplacer dans le fichier produit: Automatically generated par Name <adress@email.org>
+    // TODO remplacer dans le fichier produit: Automatically generated par Name <adress@email.org>
+    // voir pour determiner automatiquement les lignes
+    __rewrite_po_file(4);
+    __rewrite_po_file(12);
+    //TODO voir pour "Language-Team: none\n" -->  "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
     g_spawn_command_line_async(command, NULL);
     g_free(command);
+}
+
+/**
+ * Replaces the specified line in the PO file with a new line containing the
+ * msgid_bugs_address from the pXgettext struct.
+ *
+ * @param targetLine the line number to replace in the PO file (1-based index)
+ * @return true if the file was successfully rewritten, false otherwise
+ *
+ * @throws None
+ */
+static gboolean __rewrite_po_file(gint targetLine)
+{
+    GError *error = NULL;
+    GString *content = g_string_new(NULL);
+    gchar *originalWords = "Automatically generated";
+    gchar *newWords = g_strdup(pXgettext->msgid_bugs_address);
+    g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), content, NULL, &error);
+    if (error != NULL)
+    {
+        printf("Failed to read the file: %s\n", error->message);
+        g_error_free(error);
+        return false;
+    }
+    GPtrArray *lines = g_strsplit(content->str, "\n", -1);
+    if (targetLine >= 1 && targetLine <= lines->len)
+    {
+        char *line = g_ptr_array_index(lines, targetLine - 1);
+        char *newLine = g_strstr_len(line, -1, originalWords);
+        if (newLine)
+        {
+            g_string_erase(line, newLine - line, strlen(originalWords));
+            g_string_insert(line, newLine - line, newWords);
+        }
+    }
+    g_file_set_contents(filename, content->str, -1, &error);
+    if (error != NULL)
+    {
+        printf("Failed to write to the file: %s\n", error->message);
+        g_error_free(error);
+        return false;
+    }
+
+    g_string_free(content, TRUE);
+    g_ptr_array_free(lines, TRUE);
+    return true;
 }
 
 static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
@@ -934,7 +984,6 @@ static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
     const char *message = _("Choose lang to translate");
     GtkWidget *labelBoxLang = gtk_label_new(message);
     gtk_box_append(GTK_BOX(content_area), labelBoxLang);
-    // const char *langList[] = {"fr_FR", "en_US", "de_DE", "it_IT", "es_ES", NULL};
     GtkWidget *pDropDownLang = gtk_drop_down_new_from_strings(languages);
     GtkWidget *pSw = gtk_scrolled_window_new();
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(pSw), 50);
@@ -949,10 +998,10 @@ static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer
     switch (response_id)
     {
     case GTK_RESPONSE_OK:
-       const char *locale = gtk_string_object_get_string(gtk_drop_down_get_selected_item(GTK_DROP_DOWN(data)));
+        const char *locale = gtk_string_object_get_string(gtk_drop_down_get_selected_item(GTK_DROP_DOWN(data)));
         if (locale)
         {
-            g_printf("DEBUG: OnResponseLang lang:|%s|\n", locale); 
+            g_printf("DEBUG: OnResponseLang lang:|%s|\n", locale);
             pMsginit->locale = g_strdup(locale);
             gtk_window_destroy(GTK_WINDOW(pDialogBoxLang));
         }
