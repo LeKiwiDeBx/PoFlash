@@ -60,6 +60,7 @@
 #define MSG_ID_BUGS_ADDRESS_PLACEHOLDER _("Email@Address")
 #define OUTPUT_DIR_DEFAULT "locale"
 #define ADD_COMMENTS_DEFAULT "TRANSLATORS"
+#define AUTOMATICALLY_GENERATED "Automatically generated"
 // MODEL VIEW  IMPLEMENTATION
 /* definition pour l'item du Model View */
 
@@ -896,7 +897,8 @@ By emitting the appropriate signals, the GtkListView
 
 ///////////////////////////////////////////////////////////
 static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
-{ // -p -o --package-name
+{
+    // -p -o --package-name
     /*  pXgettext->output     // -o PoFlash.pot
         pXgettext->output_dir // -p locale
         pXgettext->package_name // --package-name=PoFlash */
@@ -912,12 +914,36 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     //  ouvrir le fichier package.po
     g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
     // msginit -i locale/messages.pot --locale=el_GR -o locale/el/LC_MESSAGES/messages.po
-    gchar *command = g_strdup_printf("msginit -l %s --no-translator", pMsginit->locale); //--no-translator pour eviter la question Last translator
+    gchar *command = g_strdup_printf("msginit -l %s --no-translator", pMsginit->locale);
     // TODO remplacer dans le fichier produit: Automatically generated par Name <adress@email.org>
-    // voir pour determiner automatiquement les lignes
-    __rewrite_po_file(4);
-    __rewrite_po_file(12);
-    //TODO voir pour "Language-Team: none\n" -->  "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
+
+    // Open the file
+    FILE *file = fopen(g_strconcat(pMsginit->locale, ".po", NULL), "r");
+    if (file == NULL)
+    {
+        printf("Failed to open file\n");
+        return 1;
+    }
+  
+    // Read the file line by line
+    int lineNumber = 1;
+    char line[1024];
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        // Check if the line contains the specific string
+        if (strstr(line, AUTOMATICALLY_GENERATED) != NULL)
+        {
+            __rewrite_po_file(lineNumber);
+            printf("Found the line at line number: %d\n", lineNumber);
+            break;
+        }
+        lineNumber++;
+    }
+
+    // Close the file
+    fclose(file);
+
+    // TODO voir pour "Language-Team: none\n" -->  "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
     g_spawn_command_line_async(command, NULL);
     g_free(command);
 }
@@ -935,8 +961,8 @@ static gboolean __rewrite_po_file(gint targetLine)
 {
     GError *error = NULL;
     GString *content = g_string_new(NULL);
-    gchar *originalWords = "Automatically generated";
-    gchar *newWords = g_strdup(pXgettext->msgid_bugs_address);
+    gchar *originalWords = AUTOMATICALLY_GENERATED;
+    gchar *newWords = g_strdup(g_strconcat(pXgettext->copyright_holder, " <",pXgettext->msgid_bugs_address, ">", NULL));
     g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), content, NULL, &error);
     if (error != NULL)
     {

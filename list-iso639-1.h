@@ -184,9 +184,9 @@ const char *languages[] = {
     "za", // Zhuang
     "zu"  // Zulu
 };
-char *laguage_names[] = {
+char *languages_names[] = {
     "Abkhazian",
-    "Affar",
+    "Afar",
     "Afrikaans",
     "Akan",
     "Albanian",
@@ -231,7 +231,6 @@ char *laguage_names[] = {
     "Ewe",
     "Faroese",
     "Fijian",
-    "Filipino",
     "Finnish",
     "French",
     "Fulah",
@@ -301,7 +300,7 @@ char *laguage_names[] = {
     "Norwegian Nynorsk",
     "Norwegian",
     "Sichuan Yi",
-    "North Ndebele",
+    "South Ndebele",
     "Occitan",
     "Ojibwa",
     "Oriya",
@@ -343,6 +342,10 @@ char *laguage_names[] = {
     "Thai",
     "Tigrinya",
     "Tibetan",
+    "Turkmen",
+    "Tagalog",
+    "Tswana",
+    "Tonga",
     "Turkish",
     "Tsonga",
     "Tatar",

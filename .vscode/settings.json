@@ -6,5 +6,10 @@
     "editor.columnSelection": false,
     "editor.fontFamily": "'Menlo Regular', 'Droid Sans Mono', 'monospace', monospace",
     "editor.fontSize": 16,
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "codeium.enableConfig": {
+        
+        
+        "*": true
+    }
 }
