@@ -398,6 +398,23 @@ static void add_file(GListStore *store, GFile *filename, GdkPaintable *image);
  */
 static void items_changed_file(GListModel *self, guint position, guint removed, guint added, gpointer user_data);
 
+/**
+ * @brief rewrite the file after msginit
+ *
+ * @param targetLine
+ * @return gboolean
+ */
+static gboolean __rewrite_po_file(gint targetLine);
+
+/**
+ * @brief function de tri alphabetique croissant
+ *
+ * @param a
+ * @param b
+ * @return int
+ */
+static int compare_strings(const void *a, const void *b);
+
 xgettext_args pXgettext = NULL;
 msginit_args pMsginit = NULL;
 /**
@@ -581,7 +598,7 @@ static FileListData *create_file_list_data(GListStore *store, GdkPaintable *imag
 {
     FileListData *data = g_new(FileListData, 1);
     data->store = g_object_ref(store);
-    data->delete_icon = g_object_ref(image);
+    // data->delete_icon = g_object_ref(image);
     return data;
 }
 
@@ -744,7 +761,7 @@ static void setup_file_list_item(GtkSignalListItemFactory *factory,
                                  GtkListItem *list_item,
                                  gpointer data)
 {
-    FileListItem *item = gtk_list_item_get_item(list_item);
+    // FileListItem *item = gtk_list_item_get_item(list_item);
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_list_item_set_child(list_item, box);
     GtkWidget *filename_label = gtk_label_new("");
@@ -912,7 +929,7 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     //              "Language-Team: LANGUAGE <LL@li.org>\n"        **
     //  lancer soit xdg-open ou une editeur preselectionné
     //  ouvrir le fichier package.po
-    g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
+    // g_spawn_command_line_async("xdg-open /home/jean/PoFlash/PoFlash.po", NULL);
     // msginit -i locale/messages.pot --locale=el_GR -o locale/el/LC_MESSAGES/messages.po
     gchar *command = g_strdup_printf("msginit -l %s --no-translator", pMsginit->locale);
     // TODO remplacer dans le fichier produit: Automatically generated par Name <adress@email.org>
@@ -922,29 +939,26 @@ static void OnClickCreatePo(GtkWidget *pWidget, gpointer data)
     if (file == NULL)
     {
         printf("Failed to open file\n");
-        return 1;
+        return;
     }
-  
-    // Read the file line by line
+
     int lineNumber = 1;
     char line[1024];
     while (fgets(line, sizeof(line), file) != NULL)
     {
-        // Check if the line contains the specific string
         if (strstr(line, AUTOMATICALLY_GENERATED) != NULL)
         {
             __rewrite_po_file(lineNumber);
             printf("Found the line at line number: %d\n", lineNumber);
-            break;
+            // break;
         }
         lineNumber++;
     }
 
-    // Close the file
     fclose(file);
 
     // TODO voir pour "Language-Team: none\n" -->  "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
-    g_spawn_command_line_async(command, NULL);
+    // g_spawn_command_line_async(command, NULL);
     g_free(command);
 }
 
@@ -962,36 +976,66 @@ static gboolean __rewrite_po_file(gint targetLine)
     GError *error = NULL;
     GString *content = g_string_new(NULL);
     gchar *originalWords = AUTOMATICALLY_GENERATED;
-    gchar *newWords = g_strdup(g_strconcat(pXgettext->copyright_holder, " <",pXgettext->msgid_bugs_address, ">", NULL));
-    g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), content, NULL, &error);
+    gchar *newWords = g_strdup(g_strconcat(pXgettext->copyright_holder, " <", pXgettext->msgid_bugs_address, ">", NULL));
+    g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), &content->str, NULL, &error);
     if (error != NULL)
     {
         printf("Failed to read the file: %s\n", error->message);
         g_error_free(error);
         return false;
     }
-    GPtrArray *lines = g_strsplit(content->str, "\n", -1);
+
+    // g_ptr_array_add(lines, content->str);
+    /* example
+      GPtrArray *gparray;
+  gchar *string1 = "one", *string2 = "two", *string3 = "three";
+
+  gparray = g_ptr_array_new ();
+  g_ptr_array_add (gparray, (gpointer) string1);
+  g_ptr_array_add (gparray, (gpointer) string2);
+  g_ptr_array_add (gparray, (gpointer) string3);
+
+  if (g_ptr_array_index (gparray, 0) != (gpointer) string1)
+    g_print ("ERROR: got %p instead of %p\n",
+             g_ptr_array_index (gparray, 0), string1);
+
+  g_ptr_array_free (gparray, TRUE);
+    */
+    // GPtrArray *lines = g_strsplit(content->str, "\n", -1);
+    GPtrArray *lines = g_ptr_array_new();
+    gchar **split = g_strsplit(content->str, "\n", -1);
+    for (gchar **p = split; *p != NULL; p++)
+    {
+        g_ptr_array_add(lines, *p);
+        // g_printf("DEBUG for *p: %s\n", *p);
+    }
     if (targetLine >= 1 && targetLine <= lines->len)
     {
         char *line = g_ptr_array_index(lines, targetLine - 1);
-        char *newLine = g_strstr_len(line, -1, originalWords);
-        if (newLine)
-        {
-            g_string_erase(line, newLine - line, strlen(originalWords));
-            g_string_insert(line, newLine - line, newWords);
-        }
+        // debug
+        g_printf("DEBUG: line:|%s|\n at targetLine: %d\n", line, targetLine);
+        // char *newLine = g_strstr_len(line, -1, originalWords);
+        // if (newLine)
+        // {
+        //     g_string_erase(line, newLine - line, strlen(originalWords));
+        //     g_string_insert(line, newLine - line, newWords);
+        // }
     }
-    g_file_set_contents(filename, content->str, -1, &error);
-    if (error != NULL)
-    {
-        printf("Failed to write to the file: %s\n", error->message);
-        g_error_free(error);
-        return false;
-    }
-
+    // g_file_set_contents(g_strconcat(pMsginit->locale, ".po", NULL), content->str, -1, &error);
+    // if (error != NULL)
+    // {
+    //     printf("Failed to write to the file: %s\n", error->message);
+    //     g_error_free(error);
+    //     return false;
+    // }
     g_string_free(content, TRUE);
     g_ptr_array_free(lines, TRUE);
+    g_strfreev(split);
     return true;
+}
+static int compare_strings(const void *a, const void *b)
+{
+    return strcmp(*(const char **)a, *(const char **)b);
 }
 
 static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
@@ -1010,6 +1054,8 @@ static void OpenDialogBoxLang(GtkWidget *pWidget, gpointer data)
     const char *message = _("Choose lang to translate");
     GtkWidget *labelBoxLang = gtk_label_new(message);
     gtk_box_append(GTK_BOX(content_area), labelBoxLang);
+    qsort(languages, sizeof(languages) / sizeof(languages[0]), sizeof(languages[0]),
+          (GCompareFunc)compare_strings);
     GtkWidget *pDropDownLang = gtk_drop_down_new_from_strings(languages);
     GtkWidget *pSw = gtk_scrolled_window_new();
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(pSw), 50);
@@ -1029,6 +1075,7 @@ static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer
         {
             g_printf("DEBUG: OnResponseLang lang:|%s|\n", locale);
             pMsginit->locale = g_strdup(locale);
+            OnClickCreatePo(pDialogBoxLang, NULL);
             gtk_window_destroy(GTK_WINDOW(pDialogBoxLang));
         }
         break;
