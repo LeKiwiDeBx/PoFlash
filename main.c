@@ -976,6 +976,7 @@ static gboolean __rewrite_po_file(gint targetLine)
     GError *error = NULL;
     GString *content = g_string_new(NULL);
     gchar *originalWords = AUTOMATICALLY_GENERATED;
+    //TODO split pXgettext->copyright_holder and pXgettext->msgid_bugs_address at = sign and kept right value
     gchar *newWords = g_strdup(g_strconcat(pXgettext->copyright_holder, " <", pXgettext->msgid_bugs_address, ">", NULL));
     g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), &content->str, NULL, &error);
     if (error != NULL)
@@ -985,23 +986,6 @@ static gboolean __rewrite_po_file(gint targetLine)
         return false;
     }
 
-    // g_ptr_array_add(lines, content->str);
-    /* example
-      GPtrArray *gparray;
-  gchar *string1 = "one", *string2 = "two", *string3 = "three";
-
-  gparray = g_ptr_array_new ();
-  g_ptr_array_add (gparray, (gpointer) string1);
-  g_ptr_array_add (gparray, (gpointer) string2);
-  g_ptr_array_add (gparray, (gpointer) string3);
-
-  if (g_ptr_array_index (gparray, 0) != (gpointer) string1)
-    g_print ("ERROR: got %p instead of %p\n",
-             g_ptr_array_index (gparray, 0), string1);
-
-  g_ptr_array_free (gparray, TRUE);
-    */
-    // GPtrArray *lines = g_strsplit(content->str, "\n", -1);
     GPtrArray *lines = g_ptr_array_new();
     gchar **split = g_strsplit(content->str, "\n", -1);
     for (gchar **p = split; *p != NULL; p++)
@@ -1011,26 +995,44 @@ static gboolean __rewrite_po_file(gint targetLine)
     }
     if (targetLine >= 1 && targetLine <= lines->len)
     {
-        char *line = g_ptr_array_index(lines, targetLine - 1);
+        gchar *line = g_ptr_array_index(lines, targetLine - 1);
+        GString *lineString = g_string_new_len(line, strlen(line));
         // debug
         g_printf("DEBUG: line:|%s|\n at targetLine: %d\n", line, targetLine);
-        // char *newLine = g_strstr_len(line, -1, originalWords);
-        // if (newLine)
-        // {
-        //     g_string_erase(line, newLine - line, strlen(originalWords));
-        //     g_string_insert(line, newLine - line, newWords);
-        // }
+        gchar *newLine = g_strstr_len(line, -1, originalWords);
+        g_printf("DEBUG: newLine:|%s|\n", newLine);
+        gssize position = newLine - line;
+        if (newLine)
+        {
+            g_string_erase(lineString, position, strlen(originalWords));
+            g_string_insert(lineString, position, newWords);
+        }
+        g_printf("DEBUG: newLine to insert:|%s|\n", lineString->str);
+        g_ptr_array_index(lines, targetLine - 1) = g_strdup(lineString->str);
     }
-    // g_file_set_contents(g_strconcat(pMsginit->locale, ".po", NULL), content->str, -1, &error);
-    // if (error != NULL)
-    // {
-    //     printf("Failed to write to the file: %s\n", error->message);
-    //     g_error_free(error);
-    //     return false;
-    // }
-    g_string_free(content, TRUE);
-    g_ptr_array_free(lines, TRUE);
-    g_strfreev(split);
+
+    g_string_truncate(content, 0);
+    for (guint i = 0; i < lines->len; i++)
+    {
+        g_string_append(content, (gchar *)g_ptr_array_index(lines, i));
+        if (i < lines->len - 1)
+        {
+            g_string_append_c(content, '\n');
+        }
+    }
+    g_file_set_contents(g_strconcat(pMsginit->locale, ".po", NULL), content->str, -1, &error);
+    if (error != NULL)
+    {
+        printf("Failed to write to the file: %s\n", error->message);
+        g_error_free(error);
+        return false;
+    }
+    // Clean up
+    // g_string_free(content, TRUE);
+    // g_ptr_array_free(lines, TRUE);
+    // g_strfreev(split);
+    // g_free(newWords);
+    // g_free(originalWords);
     return true;
 }
 static int compare_strings(const void *a, const void *b)
