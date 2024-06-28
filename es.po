@@ -1,7 +1,7 @@
 # Spanish translations for PACKAGE package.
 # Copyright (C) 2024 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Automatically generated, 2024.
+# Jean <toto@free.fr>, 2024.
 #
 msgid ""
 msgstr ""
@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-05-10 17:27+0200\n"
 "PO-Revision-Date: 2024-05-10 17:27+0200\n"
-"Last-Translator: Automatically generated\n"
+"Last-Translator: Jean <toto@free.fr>\n"
 "Language-Team: none\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"

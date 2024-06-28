@@ -976,8 +976,16 @@ static gboolean __rewrite_po_file(gint targetLine)
     GError *error = NULL;
     GString *content = g_string_new(NULL);
     gchar *originalWords = AUTOMATICALLY_GENERATED;
-    //TODO split pXgettext->copyright_holder and pXgettext->msgid_bugs_address at = sign and kept right value
-    gchar *newWords = g_strdup(g_strconcat(pXgettext->copyright_holder, " <", pXgettext->msgid_bugs_address, ">", NULL));
+    gchar *newWords = AUTOMATICALLY_GENERATED;
+    if (pXgettext->copyright_holder != NULL || pXgettext->msgid_bugs_address != NULL)
+    {
+        gchar **copyright_holder = g_strsplit(pXgettext->copyright_holder, "=", -1);
+        gchar **msgid_bugs_address = g_strsplit(pXgettext->msgid_bugs_address, "=", -1);
+        gchar *name = g_strdup(copyright_holder[1]);
+        name[0] = g_ascii_toupper(name[0]);
+        newWords = g_strdup(g_strconcat(name, " <", msgid_bugs_address[1], ">", NULL));
+    }
+
     g_file_get_contents(g_strconcat(pMsginit->locale, ".po", NULL), &content->str, NULL, &error);
     if (error != NULL)
     {
