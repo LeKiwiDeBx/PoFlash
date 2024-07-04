@@ -152,6 +152,14 @@ static void OnClickXgettext(GtkWidget *pWidget, gpointer data);
 static void OnClickCreatePo(GtkWidget *pWidget, gpointer data);
 
 /**
+ * @brief Appel pour lancer msgfmt sur le fichier .po -> .mo
+ *
+ * @param pWidget
+ * @param data
+ */
+static void OnClickMakeMo(GtkWidget *pWidget, gpointer data);
+
+/**
  * @brief  active le switch pour l'option --from-code
  *
  * @param pWidget self
@@ -558,8 +566,9 @@ activate(GtkApplication *app,
     g_signal_connect(G_OBJECT(pButtonCreatePo), "clicked", G_CALLBACK(OpenDialogBoxLang), NULL);
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonCreatePo, 1, 2, 1, 1);
 
-    GtkWidget *pButtonMakePo = gtk_button_new_with_label(_("Make mo"));
-    gtk_grid_attach(GTK_GRID(pGridMain), pButtonMakePo, 3, 2, 1, 1);
+    GtkWidget *pButtonMakeMo = gtk_button_new_with_label(_("Make mo"));
+    g_signal_connect(G_OBJECT(pButtonMakeMo), "clicked", G_CALLBACK(OnClickMakeMo), NULL);
+    gtk_grid_attach(GTK_GRID(pGridMain), pButtonMakeMo, 3, 2, 1, 1);
 
     GtkWidget *pButtonQuit = gtk_button_new_with_label(_("Quit"));
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonQuit, 4, 2, 1, 1);
@@ -1036,11 +1045,11 @@ static gboolean __rewrite_po_file(gint targetLine)
         return false;
     }
     // Clean up
-    // g_string_free(content, TRUE);
-    // g_ptr_array_free(lines, TRUE);
-    // g_strfreev(split);
-    // g_free(newWords);
-    // g_free(originalWords);
+    g_string_free(content, TRUE);
+    g_ptr_array_free(lines, TRUE);
+    g_strfreev(split);
+    g_free(newWords);
+    g_free(originalWords);
     return true;
 }
 static int compare_strings(const void *a, const void *b)
@@ -1291,6 +1300,27 @@ utilities python gettext
     // g_spawn_command_line_async("xgettext -L C ./*", NULL);
 }
 
+static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
+{// DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT 
+    gchar *command = NULL;
+    gint exit_status = 0;
+    GError *error = NULL;
+    // Construct the command string  DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT 
+    command = g_strdup_printf("msgfmt -o locale/%s/LC_MESSAGES/poflash.mo locale/%s.po", data->lang, data->lang);
+
+    // Execute the command
+    if (!g_spawn_command_line_sync(command, NULL, NULL, &exit_status, &error))
+    {
+        g_printerr("Error executing msgfmt: %s\n", error->message);
+        g_error_free(error);
+        g_free(command);
+        return 1;
+    }
+
+    g_free(command);
+
+    return exit_status;
+}
 /**
  * @brief devine le nom du package dans le repertoire en se basant sur le nom d'un fichier compilé type data)
  *
