@@ -23,8 +23,8 @@
             "intelliSenseMode": "${default}",
             "browse": {
                 "path": [
-                    "${workspaceFolder}"
-                   /* "/usr/include/" */
+                    "${workspaceFolder}",
+                    "/usr/include/"
                 ],
                 "limitSymbolsToIncludedHeaders": false
             },

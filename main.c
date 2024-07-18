@@ -1306,8 +1306,8 @@ static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
     gint exit_status = 0;
     GError *error = NULL;
     // Construct the command string  DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT 
+    // lister les fichiers mo disponible ainsi que les repertoires possibles, les proposer par defaut dans la zone de liste
     command = g_strdup_printf("msgfmt -o locale/%s/LC_MESSAGES/poflash.mo locale/%s.po", data->lang, data->lang);
-
     // Execute the command
     if (!g_spawn_command_line_sync(command, NULL, NULL, &exit_status, &error))
     {
@@ -1316,9 +1316,7 @@ static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
         g_free(command);
         return 1;
     }
-
     g_free(command);
-
     return exit_status;
 }
 /**
