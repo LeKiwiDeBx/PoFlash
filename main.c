@@ -254,6 +254,8 @@ static void OnResponseLang(GtkWidget *pDialogBoxLang, gint response_id, gpointer
 
 #define PACKAGE_NAME_DEFAULT __getPackageGuessIntoDir(".")
 #define FILE_EXTENSION_POT ".pot"
+#define FILE_EXTENSION_PO ".po"
+#define FILE_EXTENSION_MO ".mo"
 #define OUTPUT_DEFAULT g_strconcat(PACKAGE_NAME_DEFAULT, FILE_EXTENSION_POT, NULL)
 
 /**
@@ -567,7 +569,7 @@ activate(GtkApplication *app,
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonCreatePo, 1, 2, 1, 1);
 
     GtkWidget *pButtonMakeMo = gtk_button_new_with_label(_("Make mo"));
-    g_signal_connect(G_OBJECT(pButtonMakeMo), "clicked", G_CALLBACK(OnClickMakeMo), NULL);
+    g_signal_connect(G_OBJECT(pButtonMakeMo), "clicked", G_CALLBACK(OnClickMakeMo), pMsginit);
     gtk_grid_attach(GTK_GRID(pGridMain), pButtonMakeMo, 3, 2, 1, 1);
 
     GtkWidget *pButtonQuit = gtk_button_new_with_label(_("Quit"));
@@ -1301,23 +1303,36 @@ utilities python gettext
 }
 
 static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
-{// DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT 
+{ // DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT
     gchar *command = NULL;
     gint exit_status = 0;
     GError *error = NULL;
-    // Construct the command string  DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT 
-    // lister les fichiers mo disponible ainsi que les repertoires possibles, les proposer par defaut dans la zone de liste
-    command = g_strdup_printf("msgfmt -o locale/%s/LC_MESSAGES/poflash.mo locale/%s.po", data->lang, data->lang);
+    msginit_args pMoData = (msginit_args)malloc(sizeof(struct s_msginit_args));
+    if (!pMoData)
+    {
+        g_printf("ERROR: malloc failed\n");
+        return;
+    }
+    pMoData = (struct s_msginit_args *)data;
+    // Construct the command string  DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT
+    GDir *dir = g_dir_open(g_strdup_printf("locale/%s/LC_MESSAGES", pMoData->locale), 0, NULL);
+    if (dir == NULL)
+    {
+        g_printerr("Error: locale/%s/LC_MESSAGES directory not found\n", pMoData->locale);
+        return ;
+    }
+    command = g_strdup_printf("msgfmt locale/%s.po -o locale/%s/LC_MESSAGES/poflash.mo ", pMoData->locale, pMoData->locale);
     // Execute the command
     if (!g_spawn_command_line_sync(command, NULL, NULL, &exit_status, &error))
     {
+        g_dir_close(dir);
         g_printerr("Error executing msgfmt: %s\n", error->message);
         g_error_free(error);
         g_free(command);
-        return 1;
+        return ;
     }
     g_free(command);
-    return exit_status;
+    return ;
 }
 /**
  * @brief devine le nom du package dans le repertoire en se basant sur le nom d'un fichier compilé type data)
