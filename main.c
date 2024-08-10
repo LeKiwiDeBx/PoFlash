@@ -1319,7 +1319,16 @@ static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
     if (dir == NULL)
     {
         g_printerr("Error: locale/%s/LC_MESSAGES directory not found\n", pMoData->locale);
-        return ;
+        GtkWidget *dialog = gtk_message_dialog_new(NULL,
+                                                   GTK_DIALOG_MODAL,
+                                                   GTK_MESSAGE_ERROR,
+                                                   GTK_BUTTONS_OK,
+                                                   "Error: locale/[your lang]/LC_MESSAGES directory not found");
+        g_signal_connect(dialog, "response",
+                         G_CALLBACK(gtk_window_destroy),
+                         NULL);
+        gtk_widget_show(dialog);
+        return;
     }
     command = g_strdup_printf("msgfmt locale/%s.po -o locale/%s/LC_MESSAGES/poflash.mo ", pMoData->locale, pMoData->locale);
     // Execute the command
@@ -1329,10 +1338,10 @@ static void OnClickMakeMo(GtkWidget *pWidget, gpointer data)
         g_printerr("Error executing msgfmt: %s\n", error->message);
         g_error_free(error);
         g_free(command);
-        return ;
+        return;
     }
     g_free(command);
-    return ;
+    return;
 }
 /**
  * @brief devine le nom du package dans le repertoire en se basant sur le nom d'un fichier compilé type data)
